@@ -1,0 +1,11 @@
+{
+  "name": "lifepulse-blood-portal-frontend",
+  "version": "1.0.0",
+  "description": "Blood Donor and Blood Bank Management Portal Frontend - CCS375 Team 1",
+  "scripts": {
+    "dev": "npx serve -l 3000 .",
+    "start": "npx serve -l 3000 ."
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
