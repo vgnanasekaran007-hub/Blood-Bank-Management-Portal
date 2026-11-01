@@ -1,7 +1,7 @@
 import { api } from './api.js';
 import { store } from './state.js';
 
-// Utility: Toast notifications
+// Toast Notification
 export function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
   if (!container) return;
@@ -9,9 +9,7 @@ export function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.setAttribute('role', 'status');
-  toast.innerHTML = `
-    <span>${message}</span>
-  `;
+  toast.innerHTML = `<span>${message}</span>`;
   container.appendChild(toast);
 
   setTimeout(() => {
@@ -21,7 +19,6 @@ export function showToast(message, type = 'info') {
   }, 4000);
 }
 
-// Format date helper
 function formatDate(isoStr) {
   if (!isoStr) return 'N/A';
   const d = new Date(isoStr);
@@ -29,12 +26,45 @@ function formatDate(isoStr) {
 }
 
 // ==========================================
-// RENDERERS FOR EACH MODULE
+// THEME MANAGEMENT (DARK / BRIGHT MODE)
+// ==========================================
+function initTheme() {
+  const storedTheme = localStorage.getItem('lifepulse_theme') || 'dark';
+  applyTheme(storedTheme);
+
+  const toggleBtn = document.getElementById('theme-toggle-btn');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(newTheme);
+      localStorage.setItem('lifepulse_theme', newTheme);
+      showToast(`Switched to ${newTheme === 'dark' ? 'Dark' : 'Bright'} mode`, 'info');
+    });
+  }
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const sunIcon = document.getElementById('theme-icon-sun');
+  const moonIcon = document.getElementById('theme-icon-moon');
+  if (sunIcon && moonIcon) {
+    if (theme === 'light') {
+      sunIcon.style.display = 'block';
+      moonIcon.style.display = 'none';
+    } else {
+      sunIcon.style.display = 'none';
+      moonIcon.style.display = 'block';
+    }
+  }
+}
+
+// ==========================================
+// RENDERERS FOR APPLICATION VIEWS
 // ==========================================
 
 // 1. Ticker & Inventory Grid
 function renderTickerAndInventory(state) {
-  // Update Emergency Ticker
   const tickerWrap = document.getElementById('ticker-items');
   if (tickerWrap && state.inventory.length) {
     tickerWrap.innerHTML = state.inventory.map(item => {
@@ -48,7 +78,6 @@ function renderTickerAndInventory(state) {
     }).join('');
   }
 
-  // Update Inventory Section Grid
   const inventoryGrid = document.getElementById('inventory-matrix-grid');
   if (inventoryGrid && state.inventory.length) {
     inventoryGrid.innerHTML = state.inventory.map(item => {
@@ -60,17 +89,20 @@ function renderTickerAndInventory(state) {
           <div class="units-num tabular-nums">${item.units_available}</div>
           <div class="units-label">Units Available</div>
           <span class="inventory-status-pill ${statusClass}">${statusLabel}</span>
-          <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--slate-400);">Min: ${item.min_threshold} units</div>
+          <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">Min: ${item.min_threshold} units</div>
         </div>
       `;
     }).join('');
 
     const totalUnitsEl = document.getElementById('inventory-total-units');
     if (totalUnitsEl) totalUnitsEl.textContent = state.inventoryTotal;
+
+    const heroUnitsEl = document.getElementById('stat-units-available');
+    if (heroUnitsEl) heroUnitsEl.textContent = `${state.inventoryTotal} Units`;
   }
 }
 
-// 2. Module 2: Blood Search & Privacy-Masked Donor Cards
+// 2. Blood Group Search & Privacy-Masked Donor Cards
 function renderSearchResults(state) {
   const container = document.getElementById('donor-search-results');
   const countEl = document.getElementById('search-results-count');
@@ -133,7 +165,7 @@ function renderSearchResults(state) {
   `).join('');
 }
 
-// 3. Module 1: Donor Portal (Profile, Availability Toggle, Safe Interval)
+// 3. Donor Portal (Profile, Availability Switch, 90-day safe interval)
 function renderDonorPortal(state) {
   const profile = state.donorProfile;
   const container = document.getElementById('donor-portal-view');
@@ -155,22 +187,22 @@ function renderDonorPortal(state) {
   const days = profile.days_since_last_donation;
 
   container.innerHTML = `
-    <div class="hero-search-card" style="margin-bottom: 2rem;">
+    <div class="find-blood-card" style="margin-bottom: 2rem;">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
         <div>
-          <span class="hero-badge">Registered Voluntary Donor</span>
+          <span class="hero-pill-badge">Registered Voluntary Donor</span>
           <h3>${profile.full_name || profile.username}</h3>
-          <p style="color: var(--slate-500); font-size: 0.875rem;">Blood Group: <strong>${profile.blood_group}</strong> | Location: ${profile.district}, ${profile.city}</p>
+          <p style="color: var(--text-muted); font-size: 0.875rem;">Blood Group: <strong>${profile.blood_group}</strong> | Location: ${profile.district}, ${profile.city}</p>
         </div>
         <div style="text-align: right;">
-          <div style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--slate-700);">Availability Status:</div>
+          <div style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--text-heading);">Availability Status:</div>
           <button id="toggle-availability-btn" class="btn ${profile.is_available ? 'btn-success' : 'btn-secondary'} btn-sm">
-            ${profile.is_available ? '&#9679; Available for Emergency Call' : '&#9675; Currently Busy / Unavailable'}
+            ${profile.is_available ? '&#9679; Available for Emergency Call' : '&#9675; Currently Unavailable'}
           </button>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
         <div class="stat-card">
           <div class="stat-title">Last Donation Date</div>
           <div class="stat-value" style="font-size: 1.25rem;">${formatDate(profile.last_donation_date)}</div>
@@ -178,7 +210,7 @@ function renderDonorPortal(state) {
         </div>
         <div class="stat-card">
           <div class="stat-title">Clinical Safe Interval</div>
-          <div class="stat-value" style="font-size: 1.25rem; color: ${isEligible ? 'var(--emerald-600)' : 'var(--amber-600)'};">
+          <div class="stat-value" style="font-size: 1.25rem; color: ${isEligible ? '#059669' : '#d97706'};">
             ${isEligible ? 'Eligible Now' : 'Resting Period'}
           </div>
           <div class="stat-subtext">${isEligible ? 'Standard 90-day interval fulfilled' : 'Minimum 90 days required between donations'}</div>
@@ -191,8 +223,7 @@ function renderDonorPortal(state) {
       </div>
 
       <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
-        <button class="btn btn-secondary btn-sm" onclick="window.openEditProfileModal()">Edit Profile & Consent</button>
-        <button class="btn btn-primary btn-sm" onclick="window.openLogDonationModal()">Log Walk-in Donation</button>
+        <button class="btn btn-secondary btn-sm" onclick="window.openLogDonationModal()">Log Walk-in Donation</button>
       </div>
     </div>
 
@@ -200,7 +231,7 @@ function renderDonorPortal(state) {
     <div class="section-head">
       <div class="section-head-title">
         <h3>My Donation Records</h3>
-        <p>Official record of your voluntary blood contributions</p>
+        <p>Official verified history of your blood contributions</p>
       </div>
     </div>
     <div class="table-card">
@@ -217,21 +248,20 @@ function renderDonorPortal(state) {
             </tr>
           </thead>
           <tbody id="my-donations-table-body">
-            <!-- Populated dynamically -->
           </tbody>
         </table>
       </div>
     </div>
   `;
 
-  // Attach toggle button listener
+  // Availability toggle
   const toggleBtn = document.getElementById('toggle-availability-btn');
   if (toggleBtn) {
     toggleBtn.addEventListener('click', async () => {
       try {
         const updated = await api.donors.updateProfile({ is_available: !profile.is_available });
         store.set({ donorProfile: updated.profile });
-        showToast(`Availability updated to: ${updated.profile.is_available ? 'Available' : 'Unavailable'}`, 'success');
+        showToast(`Availability set to: ${updated.profile.is_available ? 'Available' : 'Unavailable'}`, 'success');
         renderDonorPortal(store.state);
       } catch (err) {
         showToast(err.message, 'error');
@@ -243,7 +273,7 @@ function renderDonorPortal(state) {
   const tbody = document.getElementById('my-donations-table-body');
   if (tbody) {
     if (!state.myDonations.length) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--slate-400); padding: 2rem;">No donation records logged yet.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">No donation records logged yet.</td></tr>`;
     } else {
       tbody.innerHTML = state.myDonations.map(d => {
         const statusBadge = d.status === 'VERIFIED'
@@ -253,7 +283,7 @@ function renderDonorPortal(state) {
           <tr>
             <td class="tabular-nums">#DON-${d.id}</td>
             <td>${formatDate(d.donation_date)}</td>
-            <td><strong style="color: var(--crimson-700);">${d.blood_group}</strong></td>
+            <td><strong style="color: var(--btn-primary);">${d.blood_group}</strong></td>
             <td class="tabular-nums">${d.units} unit</td>
             <td>${d.hospital_or_camp}</td>
             <td>${statusBadge}</td>
@@ -264,7 +294,7 @@ function renderDonorPortal(state) {
   }
 }
 
-// 4. Module 5: Blood Requests Workflow (Requester & Staff View)
+// 4. Blood Requests Workflow (Requester & Staff View)
 function renderRequestsWorkflow(state) {
   const container = document.getElementById('requests-table-body');
   if (!container) return;
@@ -274,8 +304,8 @@ function renderRequestsWorkflow(state) {
   if (!requests.length) {
     container.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--slate-400);">
-          No blood requests found. Click "Submit Emergency Request" to create one.
+        <td colspan="8" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+          No blood requests found. Click "+ New Emergency Blood Request" to create one.
         </td>
       </tr>
     `;
@@ -296,7 +326,6 @@ function renderRequestsWorkflow(state) {
 
     const isAdmin = state.role === 'admin';
 
-    // Admin action buttons for lifecycle transitions
     let actionButtons = '';
     if (isAdmin) {
       if (req.status === 'SUBMITTED') {
@@ -317,7 +346,7 @@ function renderRequestsWorkflow(state) {
           </button>
         `;
       } else {
-        actionButtons = `<span style="font-size: 0.75rem; color: var(--slate-400);">&#10003; Processed</span>`;
+        actionButtons = `<span style="font-size: 0.75rem; color: var(--text-muted);">&#10003; Processed</span>`;
       }
     } else {
       if (req.status === 'SUBMITTED' || req.status === 'UNDER_REVIEW') {
@@ -325,7 +354,7 @@ function renderRequestsWorkflow(state) {
           <button class="btn btn-secondary btn-sm" onclick="window.cancelRequest(${req.id})">Cancel</button>
         `;
       } else {
-        actionButtons = `<span style="font-size: 0.75rem; color: var(--slate-400);">${req.status}</span>`;
+        actionButtons = `<span style="font-size: 0.75rem; color: var(--text-muted);">${req.status}</span>`;
       }
     }
 
@@ -333,14 +362,14 @@ function renderRequestsWorkflow(state) {
       <tr>
         <td class="tabular-nums">#REQ-${req.id}</td>
         <td>
-          <strong>${req.patient_name}</strong>
-          <div style="font-size: 0.75rem; color: var(--slate-500);">${req.patient_age} yrs, ${req.patient_gender}</div>
+          <strong style="color: var(--text-heading);">${req.patient_name}</strong>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">${req.patient_age} yrs, ${req.patient_gender}</div>
         </td>
-        <td><strong style="color: var(--crimson-700); font-size: 1rem;">${req.blood_group}</strong></td>
+        <td><strong style="color: var(--btn-primary); font-size: 1rem;">${req.blood_group}</strong></td>
         <td class="tabular-nums"><strong>${req.units_needed}</strong> unit(s)</td>
         <td>
           <div>${req.hospital_name}</div>
-          <div style="font-size: 0.75rem; color: var(--slate-500);">${req.district}</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">${req.district}</div>
         </td>
         <td><span class="badge ${urgencyClass}">${req.urgency}</span></td>
         <td><span class="badge ${badgeClass}">${req.status}</span></td>
@@ -350,7 +379,7 @@ function renderRequestsWorkflow(state) {
   }).join('');
 }
 
-// 5. Module 3: Admin Donation Verification Queue
+// 5. Admin Donation Verification Queue
 function renderAdminDonationsQueue(state) {
   const container = document.getElementById('admin-donations-queue');
   if (!container) return;
@@ -361,22 +390,22 @@ function renderAdminDonationsQueue(state) {
   if (!pending.length) {
     container.innerHTML = `
       <div class="state-box" style="padding: 1.5rem;">
-        <p style="color: var(--slate-500); font-size: 0.875rem;">No pending donation records awaiting staff verification.</p>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">No pending donation records awaiting staff verification.</p>
       </div>
     `;
     return;
   }
 
   container.innerHTML = pending.map(item => `
-    <div style="background: var(--surface-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.1rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
       <div>
-        <div style="font-weight: 700; color: var(--slate-900);">
-          ${item.donor_name} (<span style="color: var(--crimson-700);">${item.blood_group}</span> - ${item.units} unit)
+        <div style="font-weight: 700; color: var(--text-heading);">
+          ${item.donor_name} (<span style="color: var(--btn-primary);">${item.blood_group}</span> - ${item.units} unit)
         </div>
-        <div style="font-size: 0.8125rem; color: var(--slate-500);">
+        <div style="font-size: 0.8125rem; color: var(--text-muted);">
           Date: ${formatDate(item.donation_date)} | Center: ${item.hospital_or_camp}
         </div>
-        ${item.notes ? `<div style="font-size: 0.75rem; color: var(--slate-600); margin-top: 0.25rem;"><em>"${item.notes}"</em></div>` : ''}
+        ${item.notes ? `<div style="font-size: 0.75rem; color: var(--text-body); margin-top: 0.25rem;"><em>"${item.notes}"</em></div>` : ''}
       </div>
       <div style="display: flex; gap: 0.5rem;">
         <button class="btn btn-success btn-sm" onclick="window.verifyDonationRecord(${item.id}, 'VERIFIED')">
@@ -402,16 +431,21 @@ function renderAdminConsole(state) {
   document.getElementById('kpi-pending-requests').textContent = kpis.pending_requests || 0;
   document.getElementById('kpi-fulfilled-requests').textContent = kpis.fulfilled_requests || 0;
 
-  // Render recent audit logs
+  // Also update hero stat banner if present
+  const heroRegistered = document.getElementById('stat-registered-donors');
+  if (heroRegistered && kpis.total_donors) {
+    heroRegistered.textContent = `${kpis.total_donors}+`;
+  }
+
   const auditContainer = document.getElementById('admin-audit-logs-body');
   if (auditContainer && state.auditLogs) {
     auditContainer.innerHTML = state.auditLogs.map(log => `
       <tr>
-        <td style="font-family: var(--font-mono); font-size: 0.75rem;">${formatDate(log.created_at)}</td>
-        <td><strong>${log.user_name}</strong></td>
-        <td><span class="badge" style="background: var(--slate-100); color: var(--slate-800);">${log.action}</span></td>
+        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">${formatDate(log.created_at)}</td>
+        <td><strong style="color: var(--text-heading);">${log.user_name}</strong></td>
+        <td><span class="badge" style="background: var(--bg-secondary); color: var(--text-heading); border: 1px solid var(--border-color);">${log.action}</span></td>
         <td>${log.entity_type} #${log.entity_id}</td>
-        <td style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--slate-500); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
           ${JSON.stringify(log.details)}
         </td>
       </tr>
@@ -420,12 +454,10 @@ function renderAdminConsole(state) {
 }
 
 // ==========================================
-// CENTRAL DATA REFRESH FUNCTION
+// CENTRAL DATA REFRESH
 // ==========================================
-
 export async function refreshAllData() {
   try {
-    // 1. Fetch live inventory (Module 4)
     const invRes = await api.inventory.get();
     store.set({
       inventory: invRes.inventory,
@@ -433,7 +465,6 @@ export async function refreshAllData() {
       criticalGroups: invRes.critical_groups,
     });
 
-    // 2. Fetch search results (Module 2)
     const { blood_group, district, city } = store.state.searchFilters;
     const searchRes = await api.search.donors(blood_group, district, city);
     store.set({
@@ -441,7 +472,6 @@ export async function refreshAllData() {
       searchSuggestion: searchRes.suggestion,
     });
 
-    // 3. If authenticated, fetch user-specific records
     if (store.state.user) {
       if (store.state.role === 'admin') {
         const [kpiRes, adminReqs, adminDons, auditRes] = await Promise.all([
@@ -478,9 +508,8 @@ export async function refreshAllData() {
 }
 
 // ==========================================
-// GLOBAL EVENT HOOKS FOR HTML INTERACTION
+// GLOBAL EVENT HOOKS
 // ==========================================
-
 window.switchModule = function (moduleName) {
   store.setModule(moduleName);
   document.querySelectorAll('.app-module-section').forEach(el => el.classList.remove('active'));
@@ -492,20 +521,24 @@ window.switchModule = function (moduleName) {
   });
 };
 
-window.quickLoginAs = async function (role) {
+window.switchRole = async function (role) {
+  // Close menu dropdown
+  const dropdown = document.getElementById('role-menu-dropdown');
+  if (dropdown) dropdown.classList.remove('show');
+
   try {
     if (role === 'admin') {
       await api.auth.login('admin', 'admin123');
-      showToast('Switched to Admin Role (Dr. Arumugam)', 'success');
+      showToast('Logged in as Staff Administrator (Dr. Arumugam)', 'success');
     } else if (role === 'donor') {
       await api.auth.login('karthik_o_pos', 'donor123');
-      showToast('Switched to Donor Role (Karthik Raman - O+)', 'success');
+      showToast('Logged in as Voluntary Donor (Karthik Raman - O+)', 'success');
     } else if (role === 'requester') {
       await api.auth.login('requester1', 'req123');
-      showToast('Switched to Requester Role (Muthu Kumar)', 'success');
+      showToast('Logged in as Requester (Muthu Kumar)', 'success');
     } else {
       await api.auth.logout();
-      showToast('Switched to Public / Guest View', 'info');
+      showToast('Switched to Public View', 'info');
     }
 
     const authCheck = await api.auth.me();
@@ -544,7 +577,7 @@ window.fulfillBloodRequest = async function (requestId, bloodGroup, unitsNeeded)
   if (!confirm(`Confirm atomic stock fulfillment for Request #${requestId}: Deduct ${unitsNeeded} unit(s) of ${bloodGroup}?`)) return;
 
   try {
-    const res = await api.requests.updateStatus(requestId, 'FULFILLED', 'Authorized and dispatched by blood bank staff.');
+    await api.requests.updateStatus(requestId, 'FULFILLED', 'Authorized and dispatched by blood bank staff.');
     showToast(`Request #${requestId} fulfilled! Stock decreased atomically.`, 'success');
     await refreshAllData();
   } catch (err) {
@@ -558,7 +591,7 @@ window.updateRequestStatus = async function (requestId, newStatus) {
 
   try {
     await api.requests.updateStatus(requestId, newStatus, remark);
-    showToast(`Request #${requestId} status set to ${newStatus}`, 'success');
+    showToast(`Request #${requestId} status updated to ${newStatus}`, 'success');
     await refreshAllData();
   } catch (err) {
     showToast(err.message, 'error');
@@ -596,23 +629,15 @@ window.verifyDonationRecord = async function (donationId, decision) {
 };
 
 function updateUIForAuth() {
-  const { user, role, donorProfile } = store.state;
+  const { user, role } = store.state;
   const userDisplay = document.getElementById('user-session-display');
-  const loginBtn = document.getElementById('header-login-btn');
-  const logoutBtn = document.getElementById('header-logout-btn');
   const adminNav = document.getElementById('nav-admin-console');
 
   if (userDisplay) {
     if (user) {
       userDisplay.textContent = `${user.first_name || user.username} (${role.toUpperCase()})`;
-      userDisplay.style.display = 'inline-block';
-      if (loginBtn) loginBtn.style.display = 'none';
-      if (logoutBtn) logoutBtn.style.display = 'inline-flex';
     } else {
-      userDisplay.textContent = 'Guest View';
-      userDisplay.style.display = 'inline-block';
-      if (loginBtn) loginBtn.style.display = 'inline-flex';
-      if (logoutBtn) logoutBtn.style.display = 'none';
+      userDisplay.textContent = 'Public View';
     }
   }
 
@@ -620,18 +645,36 @@ function updateUIForAuth() {
     adminNav.style.display = role === 'admin' ? 'inline-flex' : 'none';
   }
 
-  // Update active demo chips
-  document.querySelectorAll('.demo-chip').forEach(chip => {
-    chip.classList.toggle('active', chip.dataset.role === role);
+  // Update active role menu items
+  document.querySelectorAll('.role-menu-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.role === role);
   });
 }
 
 // ==========================================
 // APPLICATION INITIALIZATION
 // ==========================================
-
 document.addEventListener('DOMContentLoaded', async () => {
-  // Subscribe UI renders to state changes
+  // Initialize theme
+  initTheme();
+
+  // Role menu dropdown toggle
+  const roleTrigger = document.getElementById('role-menu-trigger');
+  const roleDropdown = document.getElementById('role-menu-dropdown');
+  if (roleTrigger && roleDropdown) {
+    roleTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      roleDropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!roleTrigger.contains(e.target) && !roleDropdown.contains(e.target)) {
+        roleDropdown.classList.remove('show');
+      }
+    });
+  }
+
+  // Subscribe UI renders to state updates
   store.subscribe((state) => {
     renderTickerAndInventory(state);
     renderSearchResults(state);
@@ -642,9 +685,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateUIForAuth();
   });
 
-  // Setup Blood Group Selector Buttons in Hero
+  // Hero blood selector buttons
   document.querySelectorAll('.blood-radio-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', () => {
       document.querySelectorAll('.blood-radio-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       const bg = btn.dataset.blood;
@@ -653,7 +696,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // District filter change
+  // District filter
   const districtSelect = document.getElementById('search-district-select');
   if (districtSelect) {
     districtSelect.addEventListener('change', (e) => {
@@ -662,7 +705,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Emergency Request Form Submission
+  // Emergency request form
   const reqForm = document.getElementById('emergency-request-form');
   if (reqForm) {
     reqForm.addEventListener('submit', async (e) => {
@@ -687,7 +730,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       try {
         await api.requests.create(payload);
-        showToast('Blood request submitted successfully! Staff notified.', 'success');
+        showToast('Blood request submitted successfully!', 'success');
         window.closeModal('request-modal');
         reqForm.reset();
         await refreshAllData();
@@ -698,7 +741,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Donor Registration Form Submission
+  // Donor registration form
   const donorForm = document.getElementById('donor-register-form');
   if (donorForm) {
     donorForm.addEventListener('submit', async (e) => {
@@ -733,7 +776,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Log Donation Form Submission
+  // Log donation form
   const donationForm = document.getElementById('log-donation-form');
   if (donationForm) {
     donationForm.addEventListener('submit', async (e) => {
@@ -759,7 +802,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Check initial user authentication
+  // Initial authentication check
   try {
     const authCheck = await api.auth.me();
     store.setUser(authCheck.user, authCheck.donor_profile);
@@ -767,8 +810,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     store.setUser(null, null);
   }
 
-  // Initial Data Load
+  // Load live data
   await refreshAllData();
   updateUIForAuth();
-  console.log('Blood Bank Management Portal Initialized.');
+  console.log('LifePulse Portal Initialized in Precision Clinical Mode.');
 });
