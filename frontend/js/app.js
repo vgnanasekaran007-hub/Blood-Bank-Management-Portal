@@ -70,7 +70,7 @@ function renderTickerAndInventory(state) {
     tickerWrap.innerHTML = state.inventory.map(item => {
       const isShortage = item.units_available <= item.min_threshold;
       return `
-        <span class="ticker-pill ${isShortage ? 'shortage' : ''}">
+        <span class="ticker-pill ${isShortage ? 'shortage' : ''}" onclick="window.switchModule('inventory', true)" style="cursor: pointer;" title="Click to view ${item.blood_group} stock in inventory">
           <strong>${item.blood_group}:</strong> ${item.units_available} units
           ${isShortage ? '(Critical Shortage)' : ''}
         </span>
@@ -84,12 +84,12 @@ function renderTickerAndInventory(state) {
       const statusClass = item.status === 'HEALTHY' ? 'healthy' : (item.status === 'LOW_STOCK' ? 'low' : 'critical');
       const statusLabel = item.status === 'HEALTHY' ? 'Adequate' : (item.status === 'LOW_STOCK' ? 'Low Stock' : 'Critical Depleted');
       return `
-        <div class="inventory-card">
+        <div class="inventory-card" onclick="window.openRequestModal('${item.blood_group}', 'Chennai')" style="cursor: pointer;" title="Click to request ${item.blood_group} units">
           <div class="blood-group-tag">${item.blood_group}</div>
           <div class="units-num tabular-nums">${item.units_available}</div>
           <div class="units-label">Units Available</div>
           <span class="inventory-status-pill ${statusClass}">${statusLabel}</span>
-          <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">Min: ${item.min_threshold} units</div>
+          <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">Min: ${item.min_threshold} units &bull; Click to Request</div>
         </div>
       `;
     }).join('');
@@ -97,8 +97,15 @@ function renderTickerAndInventory(state) {
     const totalUnitsEl = document.getElementById('inventory-total-units');
     if (totalUnitsEl) totalUnitsEl.textContent = state.inventoryTotal;
 
+    // Live Hero Stat Updates (Real Database Values)
     const heroUnitsEl = document.getElementById('stat-units-available');
     if (heroUnitsEl) heroUnitsEl.textContent = `${state.inventoryTotal} Units`;
+
+    const heroDonorsEl = document.getElementById('stat-registered-donors');
+    if (heroDonorsEl) heroDonorsEl.textContent = state.totalDonors ?? 0;
+
+    const heroFulfilledEl = document.getElementById('stat-fulfilled-requests');
+    if (heroFulfilledEl) heroFulfilledEl.textContent = state.fulfilledRequests ?? 0;
   }
 }
 
@@ -125,11 +132,16 @@ function renderSearchResults(state) {
     container.innerHTML = `
       <div class="state-box" style="grid-column: 1 / -1;">
         <div class="state-icon">&#128269;</div>
-        <h4 class="state-title">No Matching Donors Found</h4>
-        <p class="state-desc">No active voluntary donors match the chosen blood group and district. You can submit an Emergency Blood Request directly to blood banks.</p>
-        <button class="btn btn-primary" onclick="window.openRequestModal('${state.searchFilters.blood_group || 'O+'}')">
-          Submit Emergency Request for ${state.searchFilters.blood_group || 'Blood'}
-        </button>
+        <h4 class="state-title">No Donors Registered Yet in this Area</h4>
+        <p class="state-desc">No active voluntary donors are registered yet for the selected criteria. Be the first to register and save lives!</p>
+        <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-primary" onclick="window.openRegisterDonorModal()">
+            Register as Voluntary Donor
+          </button>
+          <button class="btn btn-secondary" onclick="window.openRequestModal('${state.searchFilters.blood_group || 'O+'}')">
+            Submit Emergency Request
+          </button>
+        </div>
       </div>
     `;
     return;
@@ -176,7 +188,7 @@ function renderDonorPortal(state) {
       <div class="state-box">
         <div class="state-icon">&#129656;</div>
         <h4 class="state-title">Donor Registration Required</h4>
-        <p class="state-desc">You are not registered as a voluntary blood donor yet. Join the registry to save lives.</p>
+        <p class="state-desc">You are not registered as a voluntary blood donor yet. Register now to save lives and manage your availability.</p>
         <button class="btn btn-primary" onclick="window.openRegisterDonorModal()">Register as Voluntary Donor</button>
       </div>
     `;
@@ -431,12 +443,6 @@ function renderAdminConsole(state) {
   document.getElementById('kpi-pending-requests').textContent = kpis.pending_requests || 0;
   document.getElementById('kpi-fulfilled-requests').textContent = kpis.fulfilled_requests || 0;
 
-  // Also update hero stat banner if present
-  const heroRegistered = document.getElementById('stat-registered-donors');
-  if (heroRegistered && kpis.total_donors) {
-    heroRegistered.textContent = `${kpis.total_donors}+`;
-  }
-
   const auditContainer = document.getElementById('admin-audit-logs-body');
   if (auditContainer && state.auditLogs) {
     auditContainer.innerHTML = state.auditLogs.map(log => `
@@ -461,8 +467,10 @@ export async function refreshAllData() {
     const invRes = await api.inventory.get();
     store.set({
       inventory: invRes.inventory,
-      inventoryTotal: invRes.total_units,
+      inventoryTotal: invRes.total_units || 0,
       criticalGroups: invRes.critical_groups,
+      totalDonors: invRes.total_donors || 0,
+      fulfilledRequests: invRes.fulfilled_requests || 0,
     });
 
     const { blood_group, district, city } = store.state.searchFilters;
@@ -485,6 +493,8 @@ export async function refreshAllData() {
           adminRequests: adminReqs.results || adminReqs,
           adminDonations: adminDons.results || adminDons,
           auditLogs: auditRes.logs || [],
+          totalDonors: kpiRes.kpis.total_donors || 0,
+          fulfilledRequests: kpiRes.kpis.fulfilled_requests || 0,
         });
       } else {
         const [myReqs, myDons] = await Promise.all([
@@ -510,45 +520,158 @@ export async function refreshAllData() {
 // ==========================================
 // GLOBAL EVENT HOOKS
 // ==========================================
-window.switchModule = function (moduleName) {
+window.switchModule = function (moduleName, shouldScroll = true) {
   store.setModule(moduleName);
   document.querySelectorAll('.app-module-section').forEach(el => el.classList.remove('active'));
   const target = document.getElementById(`module-${moduleName}`);
-  if (target) target.classList.add('active');
+  if (target) {
+    target.classList.add('active');
+    if (shouldScroll) {
+      const headerOffset = 90;
+      const elementPosition = target.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  }
 
   document.querySelectorAll('.nav-link').forEach(el => {
     el.classList.toggle('active', el.dataset.module === moduleName);
   });
 };
 
+window.searchAvailabilityAndScroll = function () {
+  const selectedBtn = document.querySelector('.blood-radio-btn.selected');
+  const bg = selectedBtn ? selectedBtn.dataset.blood : '';
+  const distSelect = document.getElementById('search-district-select');
+  const dist = distSelect ? distSelect.value : '';
+
+  // Update filters in state
+  store.set({ searchFilters: { ...store.state.searchFilters, blood_group: bg, district: dist } });
+  refreshAllData();
+
+  // Switch to search module and smoothly scroll directly to "Find Donors & Available Blood" section
+  window.switchModule('search', true);
+  showToast(`Searching available donors for ${bg || 'all groups'} in ${dist || 'all districts'}...`, 'info');
+};
+
 window.switchRole = async function (role) {
-  // Close menu dropdown
   const dropdown = document.getElementById('role-menu-dropdown');
   if (dropdown) dropdown.classList.remove('show');
 
   try {
     if (role === 'admin') {
       await api.auth.login('admin', 'admin123');
-      showToast('Logged in as Staff Administrator (Dr. Arumugam)', 'success');
-    } else if (role === 'donor') {
-      await api.auth.login('karthik_o_pos', 'donor123');
-      showToast('Logged in as Voluntary Donor (Karthik Raman - O+)', 'success');
-    } else if (role === 'requester') {
-      await api.auth.login('requester1', 'req123');
-      showToast('Logged in as Requester (Muthu Kumar)', 'success');
+      showToast('Logged in as Staff Administrator', 'success');
+      const authCheck = await api.auth.me();
+      store.setUser(authCheck.user, authCheck.donor_profile);
+      await refreshAllData();
+      updateUIForAuth();
+      populateChecksheetEdit();
+      window.switchModule('admin_console', true);
     } else {
       await api.auth.logout();
       showToast('Switched to Public View', 'info');
+      const authCheck = await api.auth.me();
+      store.setUser(authCheck.user, authCheck.donor_profile);
+      await refreshAllData();
+      updateUIForAuth();
+      populateChecksheetEdit();
+      window.switchModule('search', true);
     }
-
-    const authCheck = await api.auth.me();
-    store.setUser(authCheck.user, authCheck.donor_profile);
-    await refreshAllData();
-    updateUIForAuth();
   } catch (err) {
     showToast(err.message, 'error');
   }
 };
+
+window.copyChecksheetLink = function () {
+  const url = `${window.location.origin}${window.location.pathname}#checksheet`;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('Checksheet link copied to clipboard! You can share this link with real users/donors.', 'success');
+    }).catch(() => {
+      prompt('Copy this checksheet link to share with real users:', url);
+    });
+  } else {
+    prompt('Copy this checksheet link to share with real users:', url);
+  }
+};
+
+window.setChecksheetMode = function (mode) {
+  const newPanel = document.getElementById('checksheet-new-panel');
+  const updatePanel = document.getElementById('checksheet-update-panel');
+  const tabNew = document.getElementById('tab-checksheet-new');
+  const tabUpdate = document.getElementById('tab-checksheet-update');
+
+  if (mode === 'new') {
+    if (newPanel) newPanel.style.display = 'block';
+    if (updatePanel) updatePanel.style.display = 'none';
+    if (tabNew) { tabNew.className = 'btn btn-primary'; }
+    if (tabUpdate) { tabUpdate.className = 'btn btn-secondary'; }
+  } else {
+    if (newPanel) newPanel.style.display = 'none';
+    if (updatePanel) updatePanel.style.display = 'block';
+    if (tabNew) { tabNew.className = 'btn btn-secondary'; }
+    if (tabUpdate) { tabUpdate.className = 'btn btn-primary'; }
+    populateChecksheetEdit();
+  }
+};
+
+window.toggleFirstTimeDonor = function (isFirstTime) {
+  const dateInput = document.getElementById('cs-last-donation');
+  if (dateInput) {
+    if (isFirstTime) {
+      dateInput.value = '';
+      dateInput.disabled = true;
+    } else {
+      dateInput.disabled = false;
+    }
+  }
+};
+
+function populateChecksheetEdit() {
+  const user = store.state.user;
+  const profile = store.state.donorProfile;
+  const promptBox = document.getElementById('checksheet-login-prompt');
+  const formWrap = document.getElementById('checksheet-edit-form-wrap');
+
+  if (!user || !profile) {
+    if (promptBox) promptBox.style.display = 'block';
+    if (formWrap) formWrap.style.display = 'none';
+    return;
+  }
+
+  if (promptBox) promptBox.style.display = 'none';
+  if (formWrap) formWrap.style.display = 'block';
+
+  const nameEl = document.getElementById('cs-edit-donor-name');
+  const groupEl = document.getElementById('cs-edit-blood-group');
+  if (nameEl) nameEl.textContent = profile.full_name || user.first_name || user.username;
+  if (groupEl) groupEl.textContent = profile.blood_group;
+
+  const phoneInput = document.getElementById('cs-update-phone');
+  if (phoneInput) phoneInput.value = profile.phone_number || '';
+
+  const altPhoneInput = document.getElementById('cs-update-alt-phone');
+  if (altPhoneInput) altPhoneInput.value = profile.alternate_phone || '';
+
+  const distSelect = document.getElementById('cs-update-district');
+  if (distSelect && profile.district) distSelect.value = profile.district;
+
+  const cityInput = document.getElementById('cs-update-city');
+  if (cityInput) cityInput.value = profile.city || '';
+
+  const pinInput = document.getElementById('cs-update-pincode');
+  if (pinInput) pinInput.value = profile.pincode || '';
+
+  const dateInput = document.getElementById('cs-update-last-donation');
+  if (dateInput && profile.last_donation_date) dateInput.value = profile.last_donation_date;
+
+  const availSelect = document.getElementById('cs-update-availability');
+  if (availSelect) availSelect.value = profile.is_available ? 'true' : 'false';
+}
 
 window.openRequestModal = function (bloodGroup = 'O+', district = 'Chennai') {
   const modal = document.getElementById('request-modal');
@@ -564,7 +687,16 @@ window.closeModal = function (modalId) {
 };
 
 window.openRegisterDonorModal = function () {
+  const dropdown = document.getElementById('role-menu-dropdown');
+  if (dropdown) dropdown.classList.remove('show');
   const modal = document.getElementById('donor-register-modal');
+  if (modal) modal.classList.add('open');
+};
+
+window.openLoginModal = function () {
+  const dropdown = document.getElementById('role-menu-dropdown');
+  if (dropdown) dropdown.classList.remove('show');
+  const modal = document.getElementById('login-modal');
   if (modal) modal.classList.add('open');
 };
 
@@ -632,17 +764,29 @@ function updateUIForAuth() {
   const { user, role } = store.state;
   const userDisplay = document.getElementById('user-session-display');
   const adminNav = document.getElementById('nav-admin-console');
+  const signoutBtn = document.getElementById('menu-signout-btn');
 
   if (userDisplay) {
     if (user) {
       userDisplay.textContent = `${user.first_name || user.username} (${role.toUpperCase()})`;
+      if (signoutBtn) signoutBtn.style.display = 'flex';
     } else {
       userDisplay.textContent = 'Public View';
+      if (signoutBtn) signoutBtn.style.display = 'none';
     }
   }
 
   if (adminNav) {
     adminNav.style.display = role === 'admin' ? 'inline-flex' : 'none';
+  }
+
+  const staffBadge = document.getElementById('staff-name-badge');
+  if (staffBadge) {
+    if (user && role === 'admin') {
+      staffBadge.textContent = `Logged in as Staff Administrator (${user.first_name || user.username})`;
+    } else {
+      staffBadge.textContent = 'Logged in as Staff Administrator';
+    }
   }
 
   // Update active role menu items
@@ -655,7 +799,6 @@ function updateUIForAuth() {
 // APPLICATION INITIALIZATION
 // ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
-  // Initialize theme
   initTheme();
 
   // Role menu dropdown toggle
@@ -705,6 +848,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Account login form
+  const loginForm = document.getElementById('account-login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(loginForm);
+      const username = formData.get('username');
+      const password = formData.get('password');
+
+      try {
+        const res = await api.auth.login(username, password);
+        showToast(`Welcome back, ${res.user.first_name || res.user.username}!`, 'success');
+        window.closeModal('login-modal');
+        loginForm.reset();
+
+        const authCheck = await api.auth.me();
+        store.setUser(authCheck.user, authCheck.donor_profile);
+        await refreshAllData();
+        updateUIForAuth();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    });
+  }
+
   // Emergency request form
   const reqForm = document.getElementById('emergency-request-form');
   if (reqForm) {
@@ -730,7 +898,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       try {
         await api.requests.create(payload);
-        showToast('Blood request submitted successfully!', 'success');
+        showToast('Blood request submitted successfully to database!', 'success');
         window.closeModal('request-modal');
         reqForm.reset();
         await refreshAllData();
@@ -764,7 +932,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       try {
         const res = await api.auth.register(payload);
-        showToast('Registered as voluntary donor successfully!', 'success');
+        showToast('Donor profile registered and saved to database!', 'success');
         window.closeModal('donor-register-modal');
         donorForm.reset();
         store.setUser(res.user);
@@ -792,12 +960,102 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       try {
         await api.donations.create(payload);
-        showToast('Donation record logged! Awaiting administrator verification.', 'success');
+        showToast('Donation record saved to database! Awaiting staff verification.', 'success');
         window.closeModal('log-donation-modal');
         donationForm.reset();
         await refreshAllData();
       } catch (err) {
         showToast(`Failed to log donation: ${err.message}`, 'error');
+      }
+    });
+  }
+
+  // Checksheet - New Donor Registration
+  const csRegForm = document.getElementById('checksheet-register-form');
+  if (csRegForm) {
+    csRegForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(csRegForm);
+      const payload = {
+        username: formData.get('username'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        full_name: formData.get('full_name'),
+        role: 'donor',
+        phone_number: formData.get('phone_number'),
+        blood_group: formData.get('blood_group'),
+        gender: formData.get('gender'),
+        date_of_birth: formData.get('date_of_birth'),
+        city: formData.get('city'),
+        district: formData.get('district'),
+        pincode: formData.get('pincode'),
+        last_donation_date: formData.get('last_donation_date') || null,
+        is_available: formData.get('is_available') === 'true',
+      };
+
+      try {
+        const res = await api.auth.register(payload);
+        showToast('Donor checksheet saved directly to database!', 'success');
+        csRegForm.reset();
+        const authCheck = await api.auth.me();
+        store.setUser(authCheck.user, authCheck.donor_profile);
+        await refreshAllData();
+        updateUIForAuth();
+        populateChecksheetEdit();
+        window.setChecksheetMode('update');
+      } catch (err) {
+        showToast(`Checksheet submission failed: ${err.message}`, 'error');
+      }
+    });
+  }
+
+  // Checksheet - Sign in to load existing record
+  const csLoginForm = document.getElementById('checksheet-quick-login-form');
+  if (csLoginForm) {
+    csLoginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('cs-login-username').value;
+      const password = document.getElementById('cs-login-password').value;
+      try {
+        await api.auth.login(username, password);
+        const authCheck = await api.auth.me();
+        store.setUser(authCheck.user, authCheck.donor_profile);
+        showToast(`Welcome! Loaded details for ${authCheck.user.first_name || authCheck.user.username}`, 'success');
+        await refreshAllData();
+        updateUIForAuth();
+        populateChecksheetEdit();
+      } catch (err) {
+        showToast(`Sign in failed: ${err.message}`, 'error');
+      }
+    });
+  }
+
+  // Checksheet - Update existing details
+  const csUpdateForm = document.getElementById('checksheet-update-form');
+  if (csUpdateForm) {
+    csUpdateForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(csUpdateForm);
+      const payload = {
+        phone_number: formData.get('phone_number'),
+        alternate_phone: formData.get('alternate_phone'),
+        district: formData.get('district'),
+        city: formData.get('city'),
+        pincode: formData.get('pincode'),
+        last_donation_date: formData.get('last_donation_date') || null,
+        is_available: formData.get('is_available') === 'true',
+      };
+
+      try {
+        await api.donors.updateProfile(payload);
+        showToast('Donor details updated and saved to database successfully!', 'success');
+        const authCheck = await api.auth.me();
+        store.setUser(authCheck.user, authCheck.donor_profile);
+        await refreshAllData();
+        updateUIForAuth();
+        populateChecksheetEdit();
+      } catch (err) {
+        showToast(`Update failed: ${err.message}`, 'error');
       }
     });
   }
@@ -810,8 +1068,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     store.setUser(null, null);
   }
 
-  // Load live data
+  // Load real database data
   await refreshAllData();
   updateUIForAuth();
-  console.log('LifePulse Portal Initialized in Precision Clinical Mode.');
+  populateChecksheetEdit();
+
+  // Hash-based direct link routing (#checksheet, #inventory, etc.)
+  function handleHashRoute() {
+    const hash = window.location.hash.toLowerCase();
+    if (hash === '#checksheet' || hash === '#register') {
+      window.switchModule('checksheet');
+    } else if (hash === '#inventory') {
+      window.switchModule('inventory');
+    } else if (hash === '#requests') {
+      window.switchModule('requests');
+    } else if (hash === '#portal' || hash === '#donor') {
+      window.switchModule('donor_portal');
+    }
+  }
+
+  window.addEventListener('hashchange', handleHashRoute);
+  handleHashRoute();
+
+  console.log('LifePulse Portal Initialized in Real Working Model Mode.');
 });

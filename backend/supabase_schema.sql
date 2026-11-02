@@ -166,16 +166,16 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 10. INITIAL INVENTORY SEEDING
+-- 10. INITIAL INVENTORY SEEDING (Clean working model starts at 0 units)
 INSERT INTO public.blood_inventory (blood_group, units_available, min_threshold) VALUES
-('A+', 18, 5),
-('A-', 6, 5),
-('B+', 24, 5),
-('B-', 4, 5),
-('AB+', 11, 5),
-('AB-', 2, 5),
-('O+', 32, 5),
-('O-', 3, 5)
+('A+', 0, 5),
+('A-', 0, 5),
+('B+', 0, 5),
+('B-', 0, 5),
+('AB+', 0, 5),
+('AB-', 0, 5),
+('O+', 0, 5),
+('O-', 0, 5)
 ON CONFLICT (blood_group) DO UPDATE SET
 units_available = EXCLUDED.units_available,
 min_threshold = EXCLUDED.min_threshold,

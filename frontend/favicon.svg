@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="dropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF263F"/>
+      <stop offset="100%" stop-color="#991B1B"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#FF263F" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <path d="M16 3 C16 3 6 15 6 21 A10 10 0 0 0 26 21 C26 15 16 3 16 3 Z" fill="url(#dropGrad)" filter="url(#glow)"/>
+  <!-- Inner White Heart Pulse / Cross -->
+  <path d="M12 19 L14.5 19 L15.5 16 L17 22 L18.5 18 L19.5 19 L21 19" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -225,6 +225,9 @@ class DonorProfileView(views.APIView):
         serializer = DonorProfileSerializer(profile, data=update_data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            if 'phone_number' in update_data and hasattr(profile.user, 'profile'):
+                profile.user.profile.phone_number = update_data['phone_number']
+                profile.user.profile.save()
             log_audit(request.user, "DONOR_PROFILE_UPDATED", "DonorProfile", profile.id, update_data, request)
             return Response({
                 "message": "Donor profile updated successfully",
@@ -486,9 +489,13 @@ class BloodInventoryView(views.APIView):
         inventory = BloodInventory.objects.all().order_by('blood_group')
         total_units = inventory.aggregate(total=Sum('units_available'))['total'] or 0
         critical_groups = [inv.blood_group for inv in inventory if inv.status in ('LOW_STOCK', 'OUT_OF_STOCK')]
+        total_donors = DonorProfile.objects.count()
+        fulfilled_requests = BloodRequest.objects.filter(status='FULFILLED').count()
 
         return Response({
             "total_units": total_units,
+            "total_donors": total_donors,
+            "fulfilled_requests": fulfilled_requests,
             "critical_groups": critical_groups,
             "inventory": BloodInventorySerializer(inventory, many=True).data
         })

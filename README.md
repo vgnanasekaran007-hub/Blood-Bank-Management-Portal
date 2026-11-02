@@ -47,12 +47,12 @@
 
 ---
 
-## 3. Demo Roles & Quick Switcher
-The application features a built-in Academic Demo Bar for effortless evaluation during viva/demonstration:
-- **Staff Admin:** Dr. Arumugam (`admin` / `admin123`) &mdash; Full access to the Admin Console, Donation Verification Queue, Request Fulfillment, and Audit Logs.
-- **Voluntary Donor:** Karthik Raman (`karthik_o_pos` / `donor123`) &mdash; O+ donor with availability controls, safe interval calculation, and personal history.
-- **Emergency Requester:** Muthu Kumar (`requester1` / `req123`) &mdash; Requisitions tracking and lifecycle visibility.
-- **Public / Guest:** Unauthenticated discovery with privacy safeguards.
+## 3. Real Working Model & Role Access
+The application is a pure, live working model with zero mock data. All donor records, requisitions, inventory movements, and transactions are driven by real database operations:
+- **Staff Administrator:** Default staff credentials (`admin` / `admin123`) &mdash; Full administrative access to the Staff Console, Donation Verification Queue, Atomic Fulfillment, and Audit Logs.
+- **Voluntary Donors:** Real users fill out the **Donor Checksheet** (`#checksheet`) to register. All records save directly to the database and can be updated anytime by the donor.
+- **Emergency Requesters:** Real hospital staff and patient attendants submit emergency blood requests.
+- **Public Discovery:** Unauthenticated discovery with phone number privacy masking and real-time inventory tracking.
 
 ---
 

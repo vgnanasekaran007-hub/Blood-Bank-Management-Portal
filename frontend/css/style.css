@@ -709,12 +709,18 @@ p {
   align-items: center;
   gap: 1rem;
   box-shadow: var(--shadow-card);
-  transition: transform 160ms ease, border-color 160ms ease;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .stat-box-modern:hover {
   transform: translateY(-2px);
   border-color: var(--btn-primary);
+  box-shadow: 0 8px 24px rgba(255, 38, 63, 0.15);
+}
+
+.stat-box-modern:active {
+  transform: translateY(0);
 }
 
 .stat-icon-wrapper {
@@ -1396,5 +1402,38 @@ p {
   }
   .footer-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ========================================================
+   DONOR CHECKSHEET MODULE
+   ======================================================== */
+.checksheet-layout-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1.1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.checksheet-main-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--shadow-card);
+}
+
+.checksheet-sidebar-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: var(--shadow-card);
+}
+
+@media (max-width: 920px) {
+  .checksheet-layout-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 }
