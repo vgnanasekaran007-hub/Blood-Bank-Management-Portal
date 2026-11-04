@@ -39,7 +39,7 @@
 
 ### Step 2: Render Backend Deployment
 1. Log in to [Render](https://render.com) and click **"New +" &rarr; "Web Service"**.
-2. Connect your GitHub repository: `https://github.com/vgnanasekaran007-hub/vgnanasekaran007hub`.
+2. Connect your GitHub repository: `https://github.com/vgnanasekaran007-hub/Blood-Bank-Management-Portal`.
 3. Configure the Web Service settings:
    - **Name:** `blood-bank-portal-backend`
    - **Region:** `Singapore` (or matching Supabase region)
@@ -89,8 +89,8 @@ To run the full stack locally on any development machine:
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/vgnanasekaran007-hub/vgnanasekaran007hub.git
-cd vgnanasekaran007hub
+git clone https://github.com/vgnanasekaran007-hub/Blood-Bank-Management-Portal.git
+cd Blood-Bank-Management-Portal
 
 # 2. Run Backend Server
 cd backend

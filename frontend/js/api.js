@@ -4,10 +4,13 @@
  * Supports session cookies, CSRF tokens, and consistent error handling.
  */
 
-const API_BASE = window.API_BASE_URL || (
+// Production Render API URL (Update this with your deployed Render service URL if different)
+const PRODUCTION_BACKEND_API = window.API_BASE_URL || 'https://blood-bank-portal-backend.onrender.com/api';
+
+const API_BASE = (
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://127.0.0.1:8000/api'
-    : '/api'
+    : PRODUCTION_BACKEND_API
 );
 
 function getCookie(name) {
