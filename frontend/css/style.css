@@ -1355,6 +1355,109 @@ p {
   gap: 0.75rem;
 }
 
+/* Developer Attribution in Footer */
+.footer-developer-section {
+  border-top: 1px solid var(--border-color);
+  padding: 2rem 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.9rem;
+}
+
+.developer-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  letter-spacing: -0.01em;
+}
+
+.developer-badges {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.dev-badge {
+  display: inline-flex;
+  align-items: stretch;
+  text-decoration: none;
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, filter 0.18s ease;
+  user-select: none;
+}
+
+.dev-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.4);
+  filter: brightness(1.08);
+}
+
+.dev-badge:active {
+  transform: translateY(0);
+}
+
+.dev-badge:focus-visible {
+  outline: 2px solid var(--btn-primary);
+  outline-offset: 3px;
+}
+
+.dev-badge .badge-part {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  line-height: 1;
+}
+
+.dev-badge .badge-label {
+  background: #555555;
+  color: #ffffff;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.dev-badge .badge-value {
+  color: #ffffff;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-family: inherit;
+}
+
+.github-badge .badge-value {
+  background: #181717;
+}
+
+.gmail-badge .badge-value {
+  background: #FF002C;
+}
+
+@media (max-width: 640px) {
+  .developer-badges {
+    flex-direction: column;
+    width: 100%;
+  }
+  .dev-badge {
+    width: 100%;
+    max-width: 360px;
+    justify-content: center;
+  }
+  .dev-badge .badge-value {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.75rem;
+    padding: 0.55rem 0.65rem;
+  }
+}
+
 /* Responsive Rules */
 @media (max-width: 1024px) {
   .hero-grid {
