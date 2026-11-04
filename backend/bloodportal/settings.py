@@ -14,7 +14,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-bloodbank-portal-key-2026-team1-ccs375-academic')
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+raw_hosts = os.environ.get('ALLOWED_HOSTS', '*')
+if raw_hosts == '*':
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = [h.strip().replace('*.', '.') for h in raw_hosts.split(',') if h.strip()]
+    if '.onrender.com' not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append('.onrender.com')
+    if '.vercel.app' not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append('.vercel.app')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
