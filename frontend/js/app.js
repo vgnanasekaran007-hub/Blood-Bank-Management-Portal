@@ -880,9 +880,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         await refreshAllData();
         updateUIForAuth();
 
-        if (store.isAdmin()) {
+        if (store.state.role === 'admin' || (store.isAdmin && store.isAdmin())) {
           window.switchModule('admin_console');
-        } else if (store.isDonor()) {
+        } else if (store.state.role === 'donor' || (store.isDonor && store.isDonor())) {
           window.switchModule('donor_portal');
         }
       } catch (err) {

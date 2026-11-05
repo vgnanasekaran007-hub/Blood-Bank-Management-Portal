@@ -57,6 +57,18 @@ class AppStore {
     this.state.activeModule = moduleName;
     this.notify('navigation');
   }
+
+  isAdmin() {
+    return this.state.role === 'admin';
+  }
+
+  isDonor() {
+    return this.state.role === 'donor';
+  }
+
+  isRequester() {
+    return this.state.role === 'requester';
+  }
 }
 
 export const store = new AppStore();
