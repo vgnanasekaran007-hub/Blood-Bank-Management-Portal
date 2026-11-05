@@ -110,10 +110,15 @@ class RegisterView(views.APIView):
             token = request.session.session_key
 
             user_data = UserSerializer(user).data
+            donor_profile_data = None
+            if hasattr(user, 'donor_profile'):
+                donor_profile_data = DonorProfileSerializer(user.donor_profile).data
+
             return Response({
                 "message": "Registration successful",
                 "token": token,
-                "user": user_data
+                "user": user_data,
+                "donor_profile": donor_profile_data
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
@@ -148,23 +153,29 @@ class LoginView(views.APIView):
                 request.session.save()
             token = request.session.session_key
 
+            donor_profile_data = None
+            if hasattr(user, 'donor_profile'):
+                donor_profile_data = DonorProfileSerializer(user.donor_profile).data
+
             log_audit(user, "USER_LOGIN", "User", user.id, {"username": user.username}, request)
             return Response({
                 "message": "Login successful",
                 "token": token,
-                "user": UserSerializer(user).data
+                "user": UserSerializer(user).data,
+                "donor_profile": donor_profile_data
             }, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Invalid username or password."}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class LogoutView(views.APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        user = request.user
-        log_audit(user, "USER_LOGOUT", "User", user.id, {}, request)
-        logout(request)
+        if request.user and request.user.is_authenticated:
+            user = request.user
+            log_audit(user, "USER_LOGOUT", "User", user.id, {}, request)
+            logout(request)
         return Response({"message": "Logged out successfully."}, status=status.HTTP_200_OK)
 
 

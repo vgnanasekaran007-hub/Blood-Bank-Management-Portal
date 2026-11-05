@@ -567,10 +567,9 @@ window.switchRole = async function (role) {
 
   try {
     if (role === 'admin') {
-      await api.auth.login('admin', 'admin123');
+      const res = await api.auth.login('admin', 'admin123');
       showToast('Logged in as Staff Administrator', 'success');
-      const authCheck = await api.auth.me();
-      store.setUser(authCheck.user, authCheck.donor_profile);
+      store.setUser(res.user, res.donor_profile || null);
       await refreshAllData();
       updateUIForAuth();
       populateChecksheetEdit();
@@ -578,8 +577,7 @@ window.switchRole = async function (role) {
     } else {
       await api.auth.logout();
       showToast('Switched to Public View', 'info');
-      const authCheck = await api.auth.me();
-      store.setUser(authCheck.user, authCheck.donor_profile);
+      store.setUser(null, null);
       await refreshAllData();
       updateUIForAuth();
       populateChecksheetEdit();
@@ -588,6 +586,10 @@ window.switchRole = async function (role) {
   } catch (err) {
     showToast(err.message, 'error');
   }
+};
+
+window.handleLogout = async function () {
+  return window.switchRole('guest');
 };
 
 window.copyChecksheetLink = function () {
@@ -709,8 +711,8 @@ window.openLogDonationModal = function () {
   if (modal) modal.classList.add('open');
 };
 
-window.fulfillBloodRequest = async function (requestId, bloodGroup, unitsNeeded) {
-  if (!confirm(`Confirm atomic stock fulfillment for Request #${requestId}: Deduct ${unitsNeeded} unit(s) of ${bloodGroup}?`)) return;
+window.fulfillBloodRequest = async function (requestId, bloodGroup, unitsNeeded, skipConfirm = false) {
+  if (!skipConfirm && !confirm(`Confirm atomic stock fulfillment for Request #${requestId}: Deduct ${unitsNeeded} unit(s) of ${bloodGroup}?`)) return;
 
   try {
     await api.requests.updateStatus(requestId, 'FULFILLED', 'Authorized and dispatched by blood bank staff.');
@@ -721,9 +723,12 @@ window.fulfillBloodRequest = async function (requestId, bloodGroup, unitsNeeded)
   }
 };
 
-window.updateRequestStatus = async function (requestId, newStatus) {
-  const remark = prompt(`Enter optional remarks for status '${newStatus}':`, '');
-  if (remark === null) return;
+window.updateRequestStatus = async function (requestId, newStatus, optionalRemark) {
+  let remark = optionalRemark;
+  if (optionalRemark === undefined) {
+    remark = prompt(`Enter optional remarks for status '${newStatus}':`, '');
+    if (remark === null) return;
+  }
 
   try {
     await api.requests.updateStatus(requestId, newStatus, remark);
@@ -745,13 +750,13 @@ window.cancelRequest = async function (requestId) {
   }
 };
 
-window.verifyDonationRecord = async function (donationId, decision) {
-  let notes = '';
-  let reason = '';
-  if (decision === 'REJECTED') {
+window.verifyDonationRecord = async function (donationId, decision, optionalNotes, optionalReason) {
+  let notes = optionalNotes !== undefined ? optionalNotes : '';
+  let reason = optionalReason !== undefined ? optionalReason : '';
+  if (decision === 'REJECTED' && optionalReason === undefined) {
     reason = prompt('Enter specific reason for rejecting this donation record:', 'Hemoglobin below clinical threshold (<12.5 g/dL)');
     if (!reason) return;
-  } else {
+  } else if (decision === 'VERIFIED' && optionalNotes === undefined) {
     notes = prompt('Enter optional clinical verification notes:', 'Blood unit screened and verified normal.');
   }
 
@@ -867,10 +872,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.closeModal('login-modal');
         loginForm.reset();
 
-        const authCheck = await api.auth.me();
-        store.setUser(authCheck.user, authCheck.donor_profile);
+        store.setUser(res.user, res.donor_profile || null);
         await refreshAllData();
         updateUIForAuth();
+
+        if (store.isAdmin()) {
+          window.switchModule('admin_console');
+        } else if (store.isDonor()) {
+          window.switchModule('donor_portal');
+        }
       } catch (err) {
         showToast(err.message, 'error');
       }
@@ -941,13 +951,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
 
       try {
-        await api.auth.register(payload);
+        const res = await api.auth.register(payload);
         showToast('Donor profile registered and saved to database!', 'success');
         window.closeModal('donor-register-modal');
         donorForm.reset();
 
-        const authCheck = await api.auth.me();
-        store.setUser(authCheck.user, authCheck.donor_profile);
+        store.setUser(res.user, res.donor_profile || null);
         await refreshAllData();
         updateUIForAuth();
         window.switchModule('donor_portal');
