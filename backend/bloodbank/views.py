@@ -8,6 +8,7 @@ from django.db import transaction, connection
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum, Q, Count
+import uuid
 
 from .models import (
     UserProfile, DonorProfile, BloodInventory, DonationRecord,
@@ -104,9 +105,14 @@ class RegisterView(views.APIView):
 
             # Auto login the registered user in session
             login(request, user)
+            if not request.session.session_key:
+                request.session.save()
+            token = request.session.session_key
+
             user_data = UserSerializer(user).data
             return Response({
                 "message": "Registration successful",
+                "token": token,
                 "user": user_data
             }, status=status.HTTP_201_CREATED)
 
@@ -138,9 +144,14 @@ class LoginView(views.APIView):
                 return Response({"error": "Account is deactivated. Please contact blood bank staff."}, status=status.HTTP_403_FORBIDDEN)
 
             login(request, user)
+            if not request.session.session_key:
+                request.session.save()
+            token = request.session.session_key
+
             log_audit(user, "USER_LOGIN", "User", user.id, {"username": user.username}, request)
             return Response({
                 "message": "Login successful",
+                "token": token,
                 "user": UserSerializer(user).data
             }, status=status.HTTP_200_OK)
         else:
@@ -538,10 +549,18 @@ class InventoryTransactionListView(views.APIView):
 
 class BloodRequestViewSet(viewsets.ModelViewSet):
     serializer_class = BloodRequestSerializer
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        # Allow emergency requests to be created without prior registration
+        if self.action == 'create':
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
         user = self.request.user
+        if not user.is_authenticated:
+            return BloodRequest.objects.none()
+
         if check_is_admin(user):
             qs = BloodRequest.objects.select_related('requester', 'reviewed_by').all()
             status_param = self.request.query_params.get('status')
@@ -563,20 +582,58 @@ class BloodRequestViewSet(viewsets.ModelViewSet):
         if not serializer.is_valid():
             return Response({"error": "Validation failed", "details": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+        user = request.user if request.user.is_authenticated else None
+        if not user:
+            # Auto-create or associate requester account based on contact phone
+            contact_phone = serializer.validated_data.get('contact_phone', '').strip()
+            contact_person = serializer.validated_data.get('contact_person', 'Emergency Requester').strip()
+            username = f"req_{contact_phone}" if contact_phone else f"guest_{uuid.uuid4().hex[:8]}"
+
+            user, created = User.objects.get_or_create(
+                username=username,
+                defaults={
+                    "first_name": contact_person.split()[0] if contact_person else "Guest",
+                    "last_name": " ".join(contact_person.split()[1:]) if len(contact_person.split()) > 1 else "Requester",
+                    "email": f"{username}@lifepulse.portal"
+                }
+            )
+            if created:
+                user.set_unusable_password()
+                user.save()
+                UserProfile.objects.get_or_create(
+                    user=user,
+                    defaults={
+                        "role": "requester",
+                        "phone_number": contact_phone,
+                        "district": serializer.validated_data.get('district', 'Chennai'),
+                        "city": serializer.validated_data.get('city', 'Chennai')
+                    }
+                )
+
+            # Auto-login the user in session
+            login(request, user)
+            if not request.session.session_key:
+                request.session.save()
+
         blood_req = BloodRequest.objects.create(
-            requester=request.user,
+            requester=user,
             status='SUBMITTED',  # Initial status in lifecycle
             **serializer.validated_data
         )
 
-        log_audit(request.user, "BLOOD_REQUEST_SUBMITTED", "BloodRequest", blood_req.id, {
+        log_audit(user, "BLOOD_REQUEST_SUBMITTED", "BloodRequest", blood_req.id, {
             "patient": blood_req.patient_name,
             "blood_group": blood_req.blood_group,
             "units": blood_req.units_needed,
             "hospital": blood_req.hospital_name
         }, request)
 
-        return Response(BloodRequestSerializer(blood_req).data, status=status.HTTP_201_CREATED)
+        response_data = BloodRequestSerializer(blood_req).data
+        if request.session.session_key:
+            response_data['token'] = request.session.session_key
+            response_data['user'] = UserSerializer(user).data
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'])
     def update_status(self, request, pk=None):

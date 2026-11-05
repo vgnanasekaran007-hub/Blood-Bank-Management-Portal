@@ -1,6 +1,10 @@
 import { api } from './api.js';
 import { store } from './state.js';
 
+// Expose on window for runtime modules and testing
+window.store = store;
+window.api = api;
+
 // Toast Notification
 export function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
@@ -897,10 +901,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
 
       try {
-        await api.requests.create(payload);
+        const res = await api.requests.create(payload);
         showToast('Blood request submitted successfully to database!', 'success');
         window.closeModal('request-modal');
         reqForm.reset();
+
+        if (res.user && !store.state.user) {
+          store.setUser(res.user);
+          updateUIForAuth();
+        }
+
         await refreshAllData();
         window.switchModule('requests');
       } catch (err) {
@@ -927,16 +937,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         date_of_birth: formData.get('date_of_birth'),
         city: formData.get('city'),
         district: formData.get('district'),
-        locality: formData.get('locality'),
+        locality: formData.get('city'),
       };
 
       try {
-        const res = await api.auth.register(payload);
+        await api.auth.register(payload);
         showToast('Donor profile registered and saved to database!', 'success');
         window.closeModal('donor-register-modal');
         donorForm.reset();
-        store.setUser(res.user);
+
+        const authCheck = await api.auth.me();
+        store.setUser(authCheck.user, authCheck.donor_profile);
         await refreshAllData();
+        updateUIForAuth();
         window.switchModule('donor_portal');
       } catch (err) {
         showToast(`Registration failed: ${err.message}`, 'error');

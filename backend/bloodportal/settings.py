@@ -112,7 +112,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Django REST Framework Settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
+        'bloodbank.authentication.SessionTokenAuthentication',
+        'bloodbank.authentication.CsrfExemptSessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -126,6 +127,14 @@ REST_FRAMEWORK = {
 # Supports local development, Vercel preview URLs, and deployed production frontend
 CORS_ALLOW_ALL_ORIGINS = True  # For seamless local development and preview deployments
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'authorization',
+    'content-type',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://.*\.vercel\.app$",
     r"^http://localhost:[0-9]+$",

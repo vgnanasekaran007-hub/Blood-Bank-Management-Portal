@@ -36,6 +36,12 @@ async function request(endpoint, options = {}) {
     ...options.headers,
   };
 
+  // Attach token from localStorage for seamless cross-domain session handling
+  const token = localStorage.getItem('lifepulse_auth_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const csrftoken = getCookie('csrftoken');
   if (csrftoken) {
     headers['X-CSRFToken'] = csrftoken;
@@ -62,12 +68,20 @@ async function request(endpoint, options = {}) {
     }
 
     if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('lifepulse_auth_token');
+      }
       const errorMsg = (data && (data.error || data.detail || (data.details && JSON.stringify(data.details))))
         || `Request failed with status ${response.status}`;
       const err = new Error(errorMsg);
       err.status = response.status;
       err.data = data;
       throw err;
+    }
+
+    // Auto-save auth token on login, registration, or emergency request
+    if (data && data.token) {
+      localStorage.setItem('lifepulse_auth_token', data.token);
     }
 
     return data;
@@ -81,7 +95,13 @@ export const api = {
   auth: {
     login: (username, password) => request('/auth/login/', { method: 'POST', body: { username, password } }),
     register: (userData) => request('/auth/register/', { method: 'POST', body: userData }),
-    logout: () => request('/auth/logout/', { method: 'POST' }),
+    logout: async () => {
+      try {
+        await request('/auth/logout/', { method: 'POST' });
+      } finally {
+        localStorage.removeItem('lifepulse_auth_token');
+      }
+    },
     me: () => request('/auth/me/'),
   },
 
