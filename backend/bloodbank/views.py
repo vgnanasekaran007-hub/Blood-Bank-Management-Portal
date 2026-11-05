@@ -12,7 +12,7 @@ from django.db.models import Sum, Q, Count
 from .models import (
     UserProfile, DonorProfile, BloodInventory, DonationRecord,
     BloodRequest, InventoryTransaction, AuditLog,
-    BLOOD_GROUPS, BLOOD_GROUP_CHOICES_LIST
+    BLOOD_GROUPS, BLOOD_GROUP_CHOICES_LIST, TAMIL_NADU_DISTRICTS
 )
 from .serializers import (
     UserSerializer, RegisterSerializer, DonorProfileSerializer,
@@ -336,6 +336,17 @@ class BloodGroupSearchView(views.APIView):
             "blood_stock": stock_summary,
             "donors": results,
             "suggestion": suggestion
+        })
+
+
+class DistrictsListView(views.APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return Response({
+            "state": "Tamil Nadu",
+            "count": len(TAMIL_NADU_DISTRICTS),
+            "districts": TAMIL_NADU_DISTRICTS
         })
 
 

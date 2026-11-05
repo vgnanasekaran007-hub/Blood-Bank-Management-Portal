@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS public.donor_profiles (
 
 CREATE INDEX IF NOT EXISTS idx_donors_search ON public.donor_profiles (blood_group, district, is_available);
 CREATE INDEX IF NOT EXISTS idx_donors_city ON public.donor_profiles (city);
+COMMENT ON COLUMN public.donor_profiles.district IS 'Supports all 38 districts of Tamil Nadu (Ariyalur to Virudhunagar)';
 
 -- 5. BLOOD INVENTORY TABLE (Module 4)
 CREATE TABLE IF NOT EXISTS public.blood_inventory (

@@ -5,7 +5,7 @@ from .views import (
     DonorProfileView, DonorAdminListView, BloodGroupSearchView,
     DonationRecordViewSet, BloodInventoryView, InventoryTransactionListView,
     BloodRequestViewSet, AdminDashboardKPIView, AuditLogListView,
-    health_check
+    DistrictsListView, health_check
 )
 
 router = DefaultRouter()
@@ -28,6 +28,7 @@ urlpatterns = [
 
     # Module 2: Blood Group Search (Privacy-Preserved Discovery)
     path('search/', BloodGroupSearchView.as_view(), name='blood-search'),
+    path('districts/', DistrictsListView.as_view(), name='districts-list'),
 
     # Module 4: Blood Inventory
     path('inventory/', BloodInventoryView.as_view(), name='blood-inventory'),
