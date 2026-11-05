@@ -521,6 +521,8 @@ export async function refreshAllData() {
   }
 }
 
+window.refreshAllData = refreshAllData;
+
 // ==========================================
 // GLOBAL EVENT HOOKS
 // ==========================================
@@ -803,6 +805,8 @@ function updateUIForAuth() {
     item.classList.toggle('active', item.dataset.role === role);
   });
 }
+
+window.updateUIForAuth = updateUIForAuth;
 
 // ==========================================
 // APPLICATION INITIALIZATION

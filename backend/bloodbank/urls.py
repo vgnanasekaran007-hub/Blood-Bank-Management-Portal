@@ -36,6 +36,7 @@ urlpatterns = [
 
     # Administrative Dashboard & Audits
     path('admin/dashboard/', AdminDashboardKPIView.as_view(), name='admin-dashboard'),
+    path('admin/kpis/', AdminDashboardKPIView.as_view(), name='admin-kpis'),
     path('admin/audit-logs/', AuditLogListView.as_view(), name='admin-audit-logs'),
 
     # Module 3 (Donations) & Module 5 (Requests) via router
