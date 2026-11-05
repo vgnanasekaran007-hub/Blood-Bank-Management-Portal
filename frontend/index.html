@@ -1003,59 +1003,59 @@
         <button class="modal-close-btn" onclick="closeModal('request-modal')" aria-label="Close">&times;</button>
       </div>
       <form id="emergency-request-form">
-          <div class="modal-body">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="req-patient-name" class="form-label">Patient Full Name *</label>
-                <input type="text" id="req-patient-name" name="patient_name" class="form-control" required
-                  placeholder="e.g. S. Meenakshi">
-              </div>
-              <div class="form-group">
-                <label for="req-patient-age" class="form-label">Patient Age *</label>
-                <input type="number" id="req-patient-age" name="patient_age" class="form-control" min="0" max="120"
-                  value="35" required>
-              </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="req-patient-name" class="form-label">Patient Full Name *</label>
+              <input type="text" id="req-patient-name" name="patient_name" class="form-control" required
+                placeholder="e.g. S. Meenakshi">
             </div>
+            <div class="form-group">
+              <label for="req-patient-age" class="form-label">Patient Age *</label>
+              <input type="number" id="req-patient-age" name="patient_age" class="form-control" min="0" max="120"
+                value="35" required>
+            </div>
+          </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label for="req-blood-group" class="form-label">Required Blood Group *</label>
-                <select id="req-blood-group" name="blood_group" class="form-control" required>
-                  <option value="A+">A Positive (A+)</option>
-                  <option value="A-">A Negative (A-)</option>
-                  <option value="B+">B Positive (B+)</option>
-                  <option value="B-">B Negative (B-)</option>
-                  <option value="AB+">AB Positive (AB+)</option>
-                  <option value="AB-">AB Negative (AB-)</option>
-                  <option value="O+" selected>O Positive (O+)</option>
-                  <option value="O-">O Negative (O-)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="req-units" class="form-label">Units Needed (1-10) *</label>
-                <input type="number" id="req-units" name="units_needed" class="form-control" min="1" max="10" value="1"
-                  required>
-              </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="req-blood-group" class="form-label">Required Blood Group *</label>
+              <select id="req-blood-group" name="blood_group" class="form-control" required>
+                <option value="A+">A Positive (A+)</option>
+                <option value="A-">A Negative (A-)</option>
+                <option value="B+">B Positive (B+)</option>
+                <option value="B-">B Negative (B-)</option>
+                <option value="AB+">AB Positive (AB+)</option>
+                <option value="AB-">AB Negative (AB-)</option>
+                <option value="O+" selected>O Positive (O+)</option>
+                <option value="O-">O Negative (O-)</option>
+              </select>
             </div>
+            <div class="form-group">
+              <label for="req-units" class="form-label">Units Needed (1-10) *</label>
+              <input type="number" id="req-units" name="units_needed" class="form-control" min="1" max="10" value="1"
+                required>
+            </div>
+          </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label for="req-gender" class="form-label">Patient Gender</label>
-                <select id="req-gender" name="patient_gender" class="form-control">
-                  <option value="MALE">Male</option>
-                  <option value="FEMALE">Female</option>
-                  <option value="OTHER">Other</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="req-urgency" class="form-label">Urgency Level *</label>
-                <select id="req-urgency" name="urgency" class="form-control" required>
-                  <option value="CRITICAL">Critical Emergency (Immediate)</option>
-                  <option value="URGENT" selected>Urgent (Within 6-12 hours)</option>
-                  <option value="NORMAL">Standard (Within 24-48 hours)</option>
-                </select>
-              </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="req-gender" class="form-label">Patient Gender</label>
+              <select id="req-gender" name="patient_gender" class="form-control">
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+              </select>
             </div>
+            <div class="form-group">
+              <label for="req-urgency" class="form-label">Urgency Level *</label>
+              <select id="req-urgency" name="urgency" class="form-control" required>
+                <option value="CRITICAL">Critical Emergency (Immediate)</option>
+                <option value="URGENT" selected>Urgent (Within 6-12 hours)</option>
+                <option value="NORMAL">Standard (Within 24-48 hours)</option>
+              </select>
+            </div>
+          </div>
 
           <div class="form-group">
             <label for="req-hospital" class="form-label">Hospital Name *</label>
@@ -1146,26 +1146,27 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeModal('request-modal')">Cancel</button>
-          <button type="submit" id="req-submit-btn" class="btn btn-primary">&#128657; Submit Emergency Blood Request</button>
+          <button type="submit" id="req-submit-btn" class="btn btn-primary">&#128657; Submit Emergency Blood
+            Request</button>
         </div>
       </form>
     </div>
   </div>
 
-    <!-- ========================================================
+  <!-- ========================================================
         MODAL 2: DONOR REGISTRATION
         ======================================================== -->
-    <div id="donor-register-modal" class="modal-backdrop" role="dialog" aria-modal="true"
-      aria-labelledby="modal-donor-title">
-      <div class="modal-dialog">
-        <div class="modal-header">
-          <h3 id="modal-donor-title">Register as Voluntary Blood Donor</h3>
-          <button class="modal-close-btn" onclick="closeModal('donor-register-modal')" aria-label="Close">&times;</button>
-        </div>
-        <form id="donor-register-form">
-          <div class="modal-body">
-            <div class="form-row">
-              <div class="form-group">
+  <div id="donor-register-modal" class="modal-backdrop" role="dialog" aria-modal="true"
+    aria-labelledby="modal-donor-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-donor-title">Register as Voluntary Blood Donor</h3>
+        <button class="modal-close-btn" onclick="closeModal('donor-register-modal')" aria-label="Close">&times;</button>
+      </div>
+      <form id="donor-register-form">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
               <label for="reg-username" class="form-label">Username *</label>
               <input type="text" id="reg-username" name="username" class="form-control" required
                 placeholder="Choose a unique username">
@@ -1345,7 +1346,8 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeModal('log-donation-modal')">Cancel</button>
-          <button type="submit" id="don-submit-btn" class="btn btn-primary">&#128196; Submit Record for Verification</button>
+          <button type="submit" id="don-submit-btn" class="btn btn-primary">&#128196; Submit Record for
+            Verification</button>
         </div>
       </form>
     </div>
@@ -1448,13 +1450,14 @@
               Developed &amp; Engineered By
             </span>
             <h4 class="dev-name-heading">Gnanasekaran V</h4>
-            <span class="dev-meta-desc">Full-Stack Developer &bull; CCS375 Portal</span>
+            <span class="dev-meta-desc">DevOps Engineer &bull; Full-Stack Architect</span>
           </div>
         </div>
 
         <div class="dev-actions-group">
           <a href="https://github.com/VGNANASEKARAN007-HUB" target="_blank" rel="noopener noreferrer"
-            class="dev-github-btn" title="View Gnanasekaran V on GitHub" aria-label="GitHub Profile VGNANASEKARAN007-HUB">
+            class="dev-github-btn" title="View Gnanasekaran V on GitHub"
+            aria-label="GitHub Profile VGNANASEKARAN007-HUB">
             <svg class="gh-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path fill-rule="evenodd" clip-rule="evenodd"
                 d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
@@ -1463,7 +1466,8 @@
               <span class="gh-label">GitHub Profile</span>
               <strong class="gh-handle">VGNANASEKARAN007-HUB</strong>
             </div>
-            <svg class="gh-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <svg class="gh-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.5" aria-hidden="true">
               <path d="M7 17L17 7M17 7H7M17 7V17" />
             </svg>
           </a>
