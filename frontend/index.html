@@ -19,6 +19,30 @@
   <!-- Accessibility Skip Link -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
+  <!-- Network Status & Offline Alert Banner -->
+  <div id="network-offline-banner" class="network-offline-banner" role="alert" aria-live="assertive" style="display: none;">
+    <div class="container offline-banner-inner">
+      <div class="offline-banner-message">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+          <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+          <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+          <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+          <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+          <line x1="12" y1="20" x2="12.01" y2="20"></line>
+        </svg>
+        <span><strong>Network Issue / Offline:</strong> Unable to reach LifePulse database. Showing last verified cache.</span>
+      </div>
+      <button id="offline-retry-btn" class="btn-offline-retry" onclick="window.retryNetworkConnection()">
+        <svg id="retry-spinner-icon" class="spin-on-retry" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+        </svg>
+        <span>Retry Connection</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Main Navigation Header -->
   <header class="main-header">
     <div class="container header-inner">
@@ -152,12 +176,116 @@
           </div>
         </div>
 
-        <button class="btn btn-primary btn-sm" onclick="openRequestModal('O+', 'Chennai')">
+        <button class="btn btn-primary btn-sm desktop-request-cta" onclick="openRequestModal('O+', 'Chennai')">
           + Request Blood
+        </button>
+
+        <!-- Mobile Navigation Menu Toggle Button -->
+        <button id="mobile-menu-toggle" class="mobile-menu-toggle-btn" aria-label="Toggle navigation menu"
+          aria-expanded="false" onclick="window.toggleMobileMenu()">
+          <svg id="icon-hamburger" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+          <svg id="icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.2" style="display: none;">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </button>
       </div>
     </div>
   </header>
+
+  <!-- Mobile Navigation Drawer -->
+  <div id="mobile-nav-drawer" class="mobile-nav-drawer" aria-hidden="true">
+    <div class="mobile-drawer-inner">
+      <div class="mobile-drawer-header">
+        <span class="mobile-drawer-title">LifePulse Menu</span>
+        <button class="mobile-drawer-close" onclick="window.closeMobileMenu()" aria-label="Close menu">&times;</button>
+      </div>
+      <ul class="mobile-nav-list">
+        <li>
+          <button class="mobile-nav-link active" data-module="search"
+            onclick="window.switchModule('search'); window.closeMobileMenu();">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <span>Find Donors &amp; Blood</span>
+          </button>
+        </li>
+        <li>
+          <button class="mobile-nav-link" data-module="checksheet"
+            onclick="window.switchModule('checksheet'); window.closeMobileMenu();">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+              <path d="m9 14 2 2 4-4" />
+            </svg>
+            <span>Donor Checksheet</span>
+          </button>
+        </li>
+        <li>
+          <button class="mobile-nav-link" data-module="inventory"
+            onclick="window.switchModule('inventory'); window.closeMobileMenu();">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m2 7 10 5 10-5-10-5z" />
+              <path d="m2 17 10 5 10-5" />
+              <path d="m2 12 10 5 10-5" />
+            </svg>
+            <span>Stock Inventory</span>
+          </button>
+        </li>
+        <li>
+          <button class="mobile-nav-link" data-module="requests"
+            onclick="window.switchModule('requests'); window.closeMobileMenu();">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+            </svg>
+            <span>Blood Requests Tracking</span>
+          </button>
+        </li>
+        <li>
+          <button class="mobile-nav-link" data-module="donor_portal"
+            onclick="window.switchModule('donor_portal'); window.closeMobileMenu();">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span>Voluntary Donor Portal</span>
+          </button>
+        </li>
+        <li id="mobile-nav-admin" style="display: none;">
+          <button class="mobile-nav-link" data-module="admin_console"
+            onclick="window.switchModule('admin_console'); window.closeMobileMenu();"
+            style="color: var(--btn-primary); font-weight: 700;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            <span>Staff Console (Admin)</span>
+          </button>
+        </li>
+      </ul>
+      <div class="mobile-drawer-cta">
+        <button class="btn btn-primary" style="width: 100%; min-height: 44px;"
+          onclick="window.openRequestModal('O+', 'Chennai'); window.closeMobileMenu();">
+          + Submit Emergency Request
+        </button>
+        <button class="btn btn-secondary" style="width: 100%; margin-top: 0.6rem; min-height: 44px;"
+          onclick="window.openRegisterDonorModal(); window.closeMobileMenu();">
+          &#128154; Register as Donor
+        </button>
+      </div>
+    </div>
+  </div>
+  <div id="mobile-drawer-backdrop" class="mobile-drawer-backdrop" onclick="window.closeMobileMenu()" aria-hidden="true">
+  </div>
 
   <!-- Live Emergency Stock Ticker -->
   <section class="emergency-ticker" aria-label="Real-time blood stock status">
@@ -1483,6 +1611,50 @@
       </div>
     </div>
   </footer>
+
+  <!-- Fixed Bottom App Bar for Mobile Viewports -->
+  <nav id="mobile-bottom-nav" class="mobile-bottom-nav" aria-label="Mobile Quick Navigation">
+    <button class="bottom-nav-item active" data-module="search" onclick="window.switchModule('search')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+      </svg>
+      <span>Find</span>
+    </button>
+    <button class="bottom-nav-item" data-module="checksheet" onclick="window.switchModule('checksheet')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+        <path d="m9 14 2 2 4-4" />
+      </svg>
+      <span>Checksheet</span>
+    </button>
+    <button class="bottom-nav-item bottom-nav-fab" onclick="window.openRequestModal('O+', 'Chennai')"
+      aria-label="Submit Emergency Blood Request">
+      <div class="fab-circle">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+        </svg>
+      </div>
+      <span>Emergency</span>
+    </button>
+    <button class="bottom-nav-item" data-module="inventory" onclick="window.switchModule('inventory')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="m2 7 10 5 10-5-10-5z" />
+        <path d="m2 17 10 5 10-5" />
+        <path d="m2 12 10 5 10-5" />
+      </svg>
+      <span>Stock</span>
+    </button>
+    <button class="bottom-nav-item" data-module="requests" onclick="window.switchModule('requests')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path
+          d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+      </svg>
+      <span>Requests</span>
+    </button>
+  </nav>
 
   <!-- Scripts -->
   <script type="module" src="js/app.js"></script>

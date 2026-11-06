@@ -464,9 +464,154 @@ function renderAdminConsole(state) {
 }
 
 // ==========================================
+// SKELETON LOADERS & NETWORK RESILIENCE
+// ==========================================
+export function renderInventorySkeleton() {
+  const inventoryGrid = document.getElementById('inventory-matrix-grid');
+  if (!inventoryGrid) return;
+  const groups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+  inventoryGrid.innerHTML = groups.map(bg => `
+    <div class="inventory-card skeleton-card" aria-hidden="true">
+      <div class="blood-group-tag skeleton" style="width: 44px; height: 26px; border-radius: 8px; margin-bottom: 0.5rem;"></div>
+      <div class="skeleton skeleton-num"></div>
+      <div class="skeleton skeleton-text" style="width: 65%; margin: 0 auto 0.6rem; height: 11px;"></div>
+      <div class="skeleton skeleton-pill"></div>
+      <div class="skeleton skeleton-text" style="width: 80%; margin: 0.8rem auto 0; height: 9px;"></div>
+    </div>
+  `).join('');
+}
+
+export function renderSearchSkeleton() {
+  const container = document.getElementById('donor-search-results');
+  if (!container) return;
+  container.innerHTML = Array(4).fill(0).map(() => `
+    <div class="donor-card skeleton-card" aria-hidden="true">
+      <div class="donor-card-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div class="skeleton skeleton-badge" style="width: 42px; height: 42px; border-radius: 10px;"></div>
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem;">
+          <div class="skeleton skeleton-text" style="width: 110px; height: 14px;"></div>
+          <div class="skeleton skeleton-text" style="width: 70px; height: 10px;"></div>
+        </div>
+      </div>
+      <div class="donor-details-list" style="margin-bottom: 1.25rem;">
+        <div class="skeleton skeleton-text" style="width: 80%; height: 12px; margin-bottom: 0.5rem;"></div>
+        <div class="skeleton skeleton-text" style="width: 60%; height: 12px; margin-bottom: 0.5rem;"></div>
+        <div class="skeleton skeleton-text" style="width: 70%; height: 12px;"></div>
+      </div>
+      <div class="skeleton skeleton-btn" style="height: 38px; border-radius: 8px;"></div>
+    </div>
+  `).join('');
+}
+
+export function renderRequestsSkeleton() {
+  const container = document.getElementById('requests-table-body');
+  if (!container) return;
+  container.innerHTML = Array(4).fill(0).map(() => `
+    <tr class="skeleton-row" aria-hidden="true">
+      <td><div class="skeleton skeleton-text" style="width: 55px; height: 14px;"></div></td>
+      <td>
+        <div class="skeleton skeleton-text" style="width: 120px; height: 14px; margin-bottom: 4px;"></div>
+        <div class="skeleton skeleton-text" style="width: 75px; height: 10px;"></div>
+      </td>
+      <td><div class="skeleton skeleton-badge" style="width: 34px; height: 26px; border-radius: 6px;"></div></td>
+      <td><div class="skeleton skeleton-text" style="width: 50px; height: 14px;"></div></td>
+      <td>
+        <div class="skeleton skeleton-text" style="width: 140px; height: 14px; margin-bottom: 4px;"></div>
+        <div class="skeleton skeleton-text" style="width: 80px; height: 10px;"></div>
+      </td>
+      <td><div class="skeleton skeleton-pill" style="width: 65px; height: 22px;"></div></td>
+      <td><div class="skeleton skeleton-pill" style="width: 75px; height: 22px;"></div></td>
+      <td><div class="skeleton skeleton-btn" style="width: 80px; height: 28px; border-radius: 6px;"></div></td>
+    </tr>
+  `).join('');
+}
+
+export function renderOfflineState(containerId, title = 'Network Connection Issue', message = 'Unable to reach the LifePulse database server. Please check your internet connection.') {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = `
+    <div class="offline-state-card" style="grid-column: 1 / -1;">
+      <div class="offline-icon-box">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+          <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+          <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+          <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+          <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+          <line x1="12" y1="20" x2="12.01" y2="20"></line>
+        </svg>
+      </div>
+      <h3 class="offline-state-title">${title}</h3>
+      <p class="offline-state-desc">${message}</p>
+      <button class="btn btn-primary" onclick="window.retryNetworkConnection()">
+        &#128259; Reload with Live Data
+      </button>
+    </div>
+  `;
+}
+
+function showOfflineBanner() {
+  const banner = document.getElementById('network-offline-banner');
+  if (banner) banner.style.display = 'block';
+}
+
+function hideOfflineBanner() {
+  const banner = document.getElementById('network-offline-banner');
+  if (banner) banner.style.display = 'none';
+}
+
+window.retryNetworkConnection = async function () {
+  const spinner = document.getElementById('retry-spinner-icon');
+  if (spinner) spinner.classList.add('spinning');
+
+  showToast('Connecting to LifePulse server & reloading live records...', 'info');
+
+  renderInventorySkeleton();
+  renderSearchSkeleton();
+  renderRequestsSkeleton();
+
+  await new Promise(r => setTimeout(r, 500));
+
+  const success = await refreshAllData({ showSkeleton: false });
+  if (spinner) spinner.classList.remove('spinning');
+
+  if (success) {
+    showToast('Connection established! Live database state reloaded.', 'success');
+  } else {
+    showToast('Network issue persists. Please verify your connection.', 'error');
+  }
+};
+
+function initNetworkMonitoring() {
+  window.addEventListener('online', () => {
+    hideOfflineBanner();
+    showToast('Internet connection restored. Reloading data...', 'info');
+    window.retryNetworkConnection();
+  });
+
+  window.addEventListener('offline', () => {
+    showOfflineBanner();
+    showToast('You are offline. Showing cached portal state.', 'warning');
+  });
+
+  if (!navigator.onLine) {
+    showOfflineBanner();
+  }
+}
+
+// ==========================================
 // CENTRAL DATA REFRESH
 // ==========================================
-export async function refreshAllData() {
+export async function refreshAllData(options = {}) {
+  const { showSkeleton = false } = options;
+
+  if (showSkeleton) {
+    renderInventorySkeleton();
+    renderSearchSkeleton();
+    renderRequestsSkeleton();
+  }
+
   try {
     const invRes = await api.inventory.get();
     store.set({
@@ -493,12 +638,12 @@ export async function refreshAllData() {
           api.admin.getAuditLogs(),
         ]);
         store.set({
-          kpis: kpiRes.kpis,
+          kpis: kpiRes.kpis || kpiRes,
           adminRequests: adminReqs.results || adminReqs,
           adminDonations: adminDons.results || adminDons,
           auditLogs: auditRes.logs || [],
-          totalDonors: kpiRes.kpis.total_donors || 0,
-          fulfilledRequests: kpiRes.kpis.fulfilled_requests || 0,
+          totalDonors: (kpiRes.kpis && kpiRes.kpis.total_donors) || 0,
+          fulfilledRequests: (kpiRes.kpis && kpiRes.kpis.fulfilled_requests) || 0,
         });
       } else {
         const [myReqs, myDons] = await Promise.all([
@@ -516,15 +661,26 @@ export async function refreshAllData() {
         }
       }
     }
+
+    hideOfflineBanner();
+    return true;
   } catch (err) {
-    console.error('Data refresh error:', err);
+    console.error('Data refresh error / network issue:', err);
+    showOfflineBanner();
+    if (!store.state.inventory || !store.state.inventory.length) {
+      renderOfflineState('inventory-matrix-grid', 'Stock Inventory Offline', 'Unable to retrieve live blood inventory balances from the server.');
+    }
+    if (!store.state.searchResults || !store.state.searchResults.length) {
+      renderOfflineState('donor-search-results', 'Donor Directory Offline', 'Unable to reach the statewide donor registry database.');
+    }
+    return false;
   }
 }
 
 window.refreshAllData = refreshAllData;
 
 // ==========================================
-// GLOBAL EVENT HOOKS
+// GLOBAL EVENT HOOKS & NAVIGATION
 // ==========================================
 window.switchModule = function (moduleName, shouldScroll = true) {
   store.setModule(moduleName);
@@ -543,9 +699,57 @@ window.switchModule = function (moduleName, shouldScroll = true) {
     }
   }
 
+  // Synchronize desktop nav, mobile drawer nav, and mobile bottom nav
   document.querySelectorAll('.nav-link').forEach(el => {
     el.classList.toggle('active', el.dataset.module === moduleName);
   });
+  document.querySelectorAll('.mobile-nav-link').forEach(el => {
+    el.classList.toggle('active', el.dataset.module === moduleName);
+  });
+  document.querySelectorAll('.bottom-nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.module === moduleName);
+  });
+};
+
+// Mobile Drawer Navigation Controllers
+window.toggleMobileMenu = function () {
+  const drawer = document.getElementById('mobile-nav-drawer');
+  const isOpen = drawer && drawer.classList.contains('open');
+  if (isOpen) {
+    window.closeMobileMenu();
+  } else {
+    window.openMobileMenu();
+  }
+};
+
+window.openMobileMenu = function () {
+  const drawer = document.getElementById('mobile-nav-drawer');
+  const backdrop = document.getElementById('mobile-drawer-backdrop');
+  const toggleBtn = document.getElementById('mobile-menu-toggle');
+  const iconBurger = document.getElementById('icon-hamburger');
+  const iconClose = document.getElementById('icon-close');
+
+  if (drawer) drawer.classList.add('open');
+  if (backdrop) backdrop.classList.add('open');
+  if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'true');
+  if (iconBurger) iconBurger.style.display = 'none';
+  if (iconClose) iconClose.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeMobileMenu = function () {
+  const drawer = document.getElementById('mobile-nav-drawer');
+  const backdrop = document.getElementById('mobile-drawer-backdrop');
+  const toggleBtn = document.getElementById('mobile-menu-toggle');
+  const iconBurger = document.getElementById('icon-hamburger');
+  const iconClose = document.getElementById('icon-close');
+
+  if (drawer) drawer.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('open');
+  if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+  if (iconBurger) iconBurger.style.display = 'block';
+  if (iconClose) iconClose.style.display = 'none';
+  document.body.style.overflow = '';
 };
 
 window.searchAvailabilityAndScroll = function () {
@@ -789,6 +993,11 @@ function updateUIForAuth() {
 
   if (adminNav) {
     adminNav.style.display = role === 'admin' ? 'inline-flex' : 'none';
+  }
+
+  const mobileAdminNav = document.getElementById('mobile-nav-admin');
+  if (mobileAdminNav) {
+    mobileAdminNav.style.display = role === 'admin' ? 'block' : 'none';
   }
 
   const staffBadge = document.getElementById('staff-name-badge');
@@ -1086,6 +1295,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Initialize Network Connectivity & Offline Monitoring
+  initNetworkMonitoring();
+
   // Initial authentication check
   try {
     const authCheck = await api.auth.me();
@@ -1094,8 +1306,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     store.setUser(null, null);
   }
 
-  // Load real database data
-  await refreshAllData();
+  // Load real database data with skeleton loaders
+  await refreshAllData({ showSkeleton: true });
   updateUIForAuth();
   populateChecksheetEdit();
 

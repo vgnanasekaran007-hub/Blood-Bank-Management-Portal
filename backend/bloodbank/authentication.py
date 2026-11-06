@@ -67,3 +67,4 @@ class SessionTokenAuthentication(BaseAuthentication):
             raise exceptions.AuthenticationFailed('User account is inactive.')
 
         return (user, None)
+
