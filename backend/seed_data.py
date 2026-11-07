@@ -32,13 +32,15 @@ def init_database():
         username='admin',
         defaults={
             'email': 'admin@lifepulse.org',
-            'first_name': 'Dr. Arumugam',
-            'last_name': 'Saminathan',
+            'first_name': 'Admin',
+            'last_name': 'Portal',
             'is_staff': True,
             'is_superuser': True
         }
     )
     admin_user.set_password('admin123')
+    admin_user.first_name = 'Admin'
+    admin_user.last_name = 'Portal'
     admin_user.save()
 
     UserProfile.objects.update_or_create(

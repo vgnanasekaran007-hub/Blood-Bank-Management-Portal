@@ -49,10 +49,15 @@
       <a href="#" class="brand-link" onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); return false;"
         aria-label="LifePulse Blood Portal Home">
         <div class="brand-icon-box" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path
-              d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+          <svg width="24" height="24" viewBox="0 0 32 32" class="brand-logo-svg">
+            <defs>
+              <linearGradient id="headerDropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FF263F"/>
+                <stop offset="100%" stop-color="#991B1B"/>
+              </linearGradient>
+            </defs>
+            <path d="M16 3 C16 3 6 15 6 21 A10 10 0 0 0 26 21 C26 15 16 3 16 3 Z" fill="url(#headerDropGrad)"/>
+            <path d="M12 19 L14.5 19 L15.5 16 L17 22 L18.5 18 L19.5 19 L21 19" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
         <div class="brand-text-wrap">
@@ -125,23 +130,8 @@
         </ul>
       </nav>
 
-      <!-- Header Actions: Theme Toggle, Account Menu, Request CTA -->
+      <!-- Header Actions: Account Menu, Request CTA, Theme Toggle (Blood Icon) -->
       <div class="header-actions">
-        <!-- Dark / Light Theme Toggle -->
-        <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Bright / Dark Mode"
-          title="Toggle theme">
-          <svg id="theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" style="display: none;">
-            <circle cx="12" cy="12" r="5" />
-            <path
-              d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-          </svg>
-          <svg id="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-        </button>
-
         <!-- Account / Role Menu -->
         <div class="role-dropdown-wrap">
           <button id="role-menu-trigger" class="role-select-btn" aria-expanded="false" aria-haspopup="true">
@@ -176,8 +166,24 @@
           </div>
         </div>
 
+        <!-- Request Blood CTA Button -->
         <button class="btn btn-primary btn-sm desktop-request-cta" onclick="openRequestModal('O+', 'Chennai')">
           + Request Blood
+        </button>
+
+        <!-- Dark / Light Theme Toggle (Blood Icon, Placed Right After Request Blood) -->
+        <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Bright / Dark Mode"
+          title="Toggle Theme">
+          <svg class="theme-blood-drop-icon" width="20" height="20" viewBox="0 0 32 32" aria-hidden="true">
+            <defs>
+              <linearGradient id="themeDropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FF263F"/>
+                <stop offset="100%" stop-color="#C5162B"/>
+              </linearGradient>
+            </defs>
+            <path d="M16 3 C16 3 6 15 6 21 A10 10 0 0 0 26 21 C26 15 16 3 16 3 Z" fill="url(#themeDropGrad)"/>
+            <path d="M12 19 L14.5 19 L15.5 16 L17 22 L18.5 18 L19.5 19 L21 19" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </button>
 
         <!-- Mobile Navigation Menu Toggle Button -->
@@ -1540,9 +1546,25 @@
             Staff administration accounts have automatic access to verification and inventory controls.
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="closeModal('login-modal')">Cancel</button>
-          <button type="submit" id="login-submit-btn" class="btn btn-primary">&#128273; Sign In to Account</button>
+        <div class="modal-footer" style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <div style="display: flex; width: 100%; gap: 0.5rem;">
+            <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeModal('login-modal')">Cancel</button>
+            <button type="submit" id="login-submit-btn" class="btn btn-primary" style="flex: 2;">&#128273; Sign In to Account</button>
+          </div>
+          
+          <div style="width: 100%; text-align: center; position: relative; margin: 0.25rem 0;">
+            <span style="background: var(--bg-card); padding: 0 0.5rem; font-size: 0.75rem; color: var(--text-muted); position: relative; z-index: 1;">OR EXPLORE AS GUEST</span>
+            <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--border-subtle); z-index: 0;"></div>
+          </div>
+
+          <button type="button" class="btn btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.6rem; border-color: var(--border-color); font-weight: 600;" onclick="window.continueAsPublicGuest()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <span>Continue to Public View (Browse Portal) &rarr;</span>
+          </button>
         </div>
       </form>
     </div>
@@ -1558,9 +1580,15 @@
         <div>
           <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.85rem;">
             <div class="brand-icon-box" style="width: 2.2rem; height: 2.2rem;" aria-hidden="true">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path
-                  d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              <svg width="20" height="20" viewBox="0 0 32 32" class="brand-logo-svg">
+                <defs>
+                  <linearGradient id="footerDropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#FF263F"/>
+                    <stop offset="100%" stop-color="#991B1B"/>
+                  </linearGradient>
+                </defs>
+                <path d="M16 3 C16 3 6 15 6 21 A10 10 0 0 0 26 21 C26 15 16 3 16 3 Z" fill="url(#footerDropGrad)"/>
+                <path d="M12 19 L14.5 19 L15.5 16 L17 22 L18.5 18 L19.5 19 L21 19" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </div>
             <strong style="color: var(--text-heading); font-size: 1.1rem;">LifePulse Blood Management Portal</strong>
@@ -1600,35 +1628,38 @@
         </div>
       </div>
 
-      <!-- Developer Section (Exact Design with Dual Verification Badges) -->
-      <div class="developer-badge-section">
-        <h4 class="developer-name-title">Gnanasekaran V</h4>
-        <div class="developer-badges-row">
-          <!-- GitHub Profile Badge -->
-          <a href="https://github.com/vgnanasekaran007-hub" target="_blank" rel="noopener noreferrer"
-            class="dev-badge-shield dev-badge-github" title="Visit Gnanasekaran V on GitHub"
-            aria-label="GitHub Profile VGNANASEKARAN007-HUB">
-            <span class="badge-shield-left">
-              <svg class="badge-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" clip-rule="evenodd"
-                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-              </svg>
-              <span>GITHUB</span>
+      <!-- Developer Section (Exact Design matching User Uploaded Image) -->
+      <div class="portal-developer-card">
+        <div class="dev-profile-group">
+          <div class="dev-avatar-box" aria-hidden="true">
+            <span>GV</span>
+          </div>
+          <div class="dev-info-col">
+            <span class="dev-role-kicker">
+              <span class="dev-role-dot"></span>
+              DEVELOPED &amp; ENGINEERED BY
             </span>
-            <span class="badge-shield-right">VGNANASEKARAN007-HUB</span>
-          </a>
+            <h4 class="dev-name-heading">Gnanasekaran V</h4>
+            <span class="dev-meta-desc">Full-Stack Developer &bull; CCS375 Portal</span>
+          </div>
+        </div>
 
-          <!-- Gmail Contact Badge -->
-          <a href="mailto:vgnanasekaran007@gmail.com" class="dev-badge-shield dev-badge-gmail"
-            title="Send Email to Gnanasekaran V" aria-label="Email vgnanasekaran007@gmail.com">
-            <span class="badge-shield-left">
-              <svg class="badge-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path
-                  d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
-              </svg>
-              <span>GMAIL</span>
-            </span>
-            <span class="badge-shield-right">VGNANASEKARAN007@GMAIL.COM</span>
+        <div class="dev-actions-group">
+          <a href="https://github.com/vgnanasekaran007-hub" target="_blank" rel="noopener noreferrer"
+            class="dev-github-btn" title="View Gnanasekaran V on GitHub"
+            aria-label="GitHub Profile VGNANASEKARAN007-HUB">
+            <svg class="gh-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+            </svg>
+            <div class="gh-text-box">
+              <span class="gh-label">GITHUB PROFILE</span>
+              <strong class="gh-handle">VGNANASEKARAN007-HUB</strong>
+            </div>
+            <svg class="gh-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.5" aria-hidden="true">
+              <path d="M7 17L17 7M17 7H7M17 7V17" />
+            </svg>
           </a>
         </div>
       </div>

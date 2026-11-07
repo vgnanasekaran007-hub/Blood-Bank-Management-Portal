@@ -50,16 +50,10 @@ function initTheme() {
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  const sunIcon = document.getElementById('theme-icon-sun');
-  const moonIcon = document.getElementById('theme-icon-moon');
-  if (sunIcon && moonIcon) {
-    if (theme === 'light') {
-      sunIcon.style.display = 'block';
-      moonIcon.style.display = 'none';
-    } else {
-      sunIcon.style.display = 'none';
-      moonIcon.style.display = 'block';
-    }
+  const toggleBtn = document.getElementById('theme-toggle-btn');
+  if (toggleBtn) {
+    toggleBtn.setAttribute('title', theme === 'dark' ? 'Switch to Bright Mode' : 'Switch to Dark Mode');
+    toggleBtn.setAttribute('aria-label', theme === 'dark' ? 'Switch to Bright Mode' : 'Switch to Dark Mode');
   }
 }
 
@@ -896,6 +890,17 @@ window.openRequestModal = function (bloodGroup = 'O+', district = 'Chennai') {
 window.closeModal = function (modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.remove('open');
+  if (modalId === 'login-modal') {
+    sessionStorage.setItem('lifepulse_guest_visited', 'true');
+  }
+};
+
+window.continueAsPublicGuest = function () {
+  sessionStorage.setItem('lifepulse_guest_visited', 'true');
+  window.closeModal('login-modal');
+  window.switchRole('guest');
+  window.switchModule('search');
+  showToast('Welcome to LifePulse! Browsing in Public View.', 'info');
 };
 
 window.openRegisterDonorModal = function () {
@@ -1491,6 +1496,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   await refreshAllData({ showSkeleton: true });
   updateUIForAuth();
   populateChecksheetEdit();
+
+  // First entrance: directly prompt Sign In modal with guest/public view option if unauthenticated
+  const isUserAuthenticated = !!store.state.user || !!localStorage.getItem('access_token') || !!localStorage.getItem('token');
+  const hasChosenGuest = sessionStorage.getItem('lifepulse_guest_visited');
+  if (!isUserAuthenticated && !hasChosenGuest) {
+    setTimeout(() => {
+      window.openLoginModal();
+    }, 350);
+  }
 
   // Hash-based direct link routing (#checksheet, #inventory, etc.)
   function handleHashRoute() {

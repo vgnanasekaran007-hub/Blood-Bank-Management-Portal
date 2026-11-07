@@ -90,6 +90,8 @@ html {
   -webkit-text-size-adjust: 100%;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 38, 63, 0.45) var(--bg-secondary);
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* ==========================================================================
@@ -1454,94 +1456,165 @@ p {
 }
 
 /* ========================================================
-   PORTAL DEVELOPER SECTION (Matching Exact Badge Design)
+   PORTAL DEVELOPER SPOTLIGHT SECTION (Exact Match to User Screenshot)
    ======================================================== */
-.developer-badge-section {
+.portal-developer-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-left: 3.5px solid var(--btn-primary);
+  border-radius: 14px;
+  padding: 1.25rem 1.65rem;
+  margin: 2.25rem 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 38, 63, 0.08);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.portal-developer-card:hover {
+  border-color: var(--accent-secondary);
+  border-left-color: var(--btn-primary);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 22px var(--accent-glow);
+}
+
+.dev-profile-group {
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+}
+
+.dev-avatar-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--btn-primary);
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 10px rgba(255, 38, 63, 0.12);
+}
+
+.dev-info-col {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.85rem;
-  margin: 2.25rem 0 1.75rem;
-  padding: 1.5rem 1.25rem;
-  background: #09080a;
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), var(--shadow-card);
+  gap: 0.25rem;
 }
 
-.developer-name-title {
-  margin: 0;
-  color: #ffffff;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-size: 1.15rem;
-  font-weight: 600;
-  letter-spacing: 0.015em;
-}
-
-.developer-badges-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.85rem;
-}
-
-.dev-badge-shield {
-  display: inline-flex;
-  align-items: stretch;
-  border-radius: 4px;
-  overflow: hidden;
-  text-decoration: none;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-size: 0.725rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
-  line-height: 1;
-  user-select: none;
-}
-
-.dev-badge-shield:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
-  filter: brightness(1.12);
-}
-
-.badge-shield-left {
-  background: #4a4a4a;
-  color: #ffffff;
-  padding: 0.6rem 0.8rem;
+.dev-role-kicker {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--text-muted);
 }
 
-.badge-shield-left svg {
+.dev-role-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--btn-primary);
+  display: inline-block;
+  box-shadow: 0 0 8px var(--btn-primary);
+}
+
+.dev-name-heading {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.dev-meta-desc {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.dev-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dev-github-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-heading);
+  padding: 0.65rem 1.15rem;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dev-github-btn .gh-icon {
+  color: var(--text-heading);
   flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
-.dev-badge-github .badge-shield-right {
-  background: #101010;
-  color: #ffffff;
-  padding: 0.6rem 0.95rem;
-  display: inline-flex;
-  align-items: center;
-  text-transform: uppercase;
-  font-weight: 800;
+.dev-github-btn .gh-text-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
 }
 
-.dev-badge-gmail .badge-shield-right {
-  background: #ff002b; /* Vibrant Gmail Red matching screenshot */
-  color: #ffffff;
-  padding: 0.6rem 0.95rem;
-  display: inline-flex;
-  align-items: center;
+.dev-github-btn .gh-label {
+  font-size: 0.6875rem;
   text-transform: uppercase;
-  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.dev-github-btn .gh-handle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  font-family: inherit;
+}
+
+.dev-github-btn .gh-arrow {
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.dev-github-btn:hover {
+  border-color: var(--btn-primary);
+  background: var(--accent-soft);
+  color: var(--text-heading);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255, 38, 63, 0.2);
+}
+
+.dev-github-btn:hover .gh-arrow {
+  transform: translate(2px, -2px);
+  color: var(--btn-primary);
+}
+
+.dev-github-btn:hover .gh-icon {
+  transform: scale(1.08);
 }
 
 /* ========================================================
@@ -1965,12 +2038,13 @@ p {
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.4);
   z-index: 1200;
   transform: translateX(100%);
-  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
+  display: none;
   flex-direction: column;
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .mobile-nav-drawer.open {
+  display: flex;
   transform: translateX(0);
 }
 
@@ -2194,6 +2268,16 @@ p {
 
 /* 2. Tablets Landscape (<= 1024px) */
 @media (max-width: 1024px) {
+  .main-header nav:not(.mobile-bottom-nav),
+  .nav-menu {
+    display: none !important;
+  }
+  .mobile-menu-toggle-btn {
+    display: inline-flex !important;
+  }
+  .desktop-request-cta {
+    display: none !important;
+  }
   .hero-grid {
     grid-template-columns: 1fr;
     gap: 2.25rem;
@@ -2221,8 +2305,10 @@ p {
     padding-bottom: 74px; /* Space for fixed bottom bar */
   }
 
+  .main-header nav:not(.mobile-bottom-nav),
+  .nav-menu,
   .main-nav {
-    display: none; /* Replaced by bottom nav and mobile drawer */
+    display: none !important; /* Replaced by bottom nav and mobile drawer on mobile */
   }
 
   .mobile-menu-toggle-btn {
