@@ -1364,6 +1364,453 @@ p {
   flex-shrink: 0;
 }
 
+/* ========================================================
+   AUTHENTICATION PORTAL MODAL (Exact Clone of Reference Image 1)
+   ======================================================== */
+.portal-auth-backdrop {
+  background: radial-gradient(circle at 15% 20%, rgba(200, 18, 45, 0.3) 0%, transparent 48%),
+              radial-gradient(circle at 85% 80%, rgba(200, 18, 45, 0.3) 0%, transparent 48%),
+              rgba(7, 3, 8, 0.84) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  padding: 1.5rem 1rem !important;
+  z-index: 2500 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portal-auth-card {
+  max-width: 490px;
+  width: 100%;
+  border-radius: 30px;
+  background: radial-gradient(circle at 50% 0%, rgba(55, 12, 24, 0.6) 0%, rgba(14, 6, 12, 0.96) 65%), #0c0509;
+  border: 1.5px solid rgba(255, 38, 63, 0.65);
+  box-shadow: 0 0 35px rgba(255, 30, 60, 0.45), inset 0 0 25px rgba(255, 30, 60, 0.15), 0 25px 60px rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  padding: 2.2rem 2rem 1.6rem;
+  position: relative;
+  overflow-y: auto;
+  max-height: calc(100vh - 2.5rem);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 38, 63, 0.4) transparent;
+  transform: translateY(18px);
+  transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+}
+
+.modal-backdrop.open .portal-auth-card {
+  transform: translateY(0);
+}
+
+/* Close Button (X) */
+.portal-auth-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(30, 20, 26, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.4rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.portal-auth-close:hover {
+  background: rgba(255, 38, 63, 0.25);
+  border-color: #ff2642;
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+/* Emblem & Header */
+.auth-header-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 1.35rem;
+}
+
+.auth-emblem-wrap {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.65rem;
+  filter: drop-shadow(0 0 16px rgba(255, 38, 63, 0.85));
+}
+
+.auth-emblem-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.auth-portal-title {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #faede0;
+  margin: 0 0 0.5rem;
+  line-height: 1.25;
+}
+
+.portal-title-red {
+  color: #ff2642;
+}
+
+.auth-tagline-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 380px;
+}
+
+.auth-tagline-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 167, 85, 0.7), transparent);
+}
+
+.auth-tagline-text {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #d4a755;
+  text-transform: uppercase;
+}
+
+/* Tabs: Sign In / Create New Account */
+.auth-tabs-row {
+  display: flex;
+  gap: 0.75rem;
+  background: rgba(18, 8, 14, 0.6);
+  padding: 0.35rem;
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 1.25rem;
+}
+
+.auth-tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.15rem;
+  border-radius: 22px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.75);
+  background: transparent;
+}
+
+.auth-tab-btn.active {
+  background: linear-gradient(135deg, #e50914 0%, #b20710 100%);
+  border-color: rgba(255, 80, 100, 0.6);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 0 16px rgba(229, 9, 20, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.auth-tab-btn:not(.active):hover {
+  background: rgba(35, 20, 28, 0.75);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Section Heading with ECG Lines */
+.auth-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-bottom: 0.35rem;
+}
+
+.ecg-pulse-graphic {
+  filter: drop-shadow(0 0 6px #ff2642);
+}
+
+.auth-section-label {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.015em;
+}
+
+.auth-label-red {
+  color: #ff2642;
+}
+
+.auth-section-sub {
+  text-align: center;
+  font-size: 0.8125rem;
+  color: #9e96a8;
+  margin: 0 0 1.25rem;
+  line-height: 1.4;
+}
+
+/* Form & Inputs */
+.portal-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.05rem;
+}
+
+.auth-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.auth-field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #e6e0eb;
+}
+
+.label-glyph {
+  filter: drop-shadow(0 0 4px rgba(255, 38, 63, 0.6));
+}
+
+.auth-input-container {
+  display: flex;
+  align-items: center;
+  background: rgba(10, 4, 8, 0.88);
+  border: 1px solid rgba(255, 40, 70, 0.48);
+  box-shadow: 0 0 12px rgba(255, 30, 60, 0.18), inset 0 0 8px rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  padding: 0 0.85rem;
+  height: 48px;
+  gap: 0.65rem;
+  transition: all 0.2s ease;
+}
+
+.auth-input-container:focus-within {
+  border-color: #ff2642;
+  box-shadow: 0 0 18px rgba(255, 38, 63, 0.45), inset 0 0 6px rgba(255, 38, 63, 0.1);
+}
+
+.auth-text-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-family: inherit;
+}
+
+.auth-text-input::placeholder {
+  color: #6a6473;
+}
+
+.auth-eye-toggle {
+  background: transparent;
+  border: none;
+  color: #8a8494;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.auth-eye-toggle:hover {
+  color: #ff2642;
+}
+
+/* Staff Administration Notice */
+.auth-staff-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: linear-gradient(135deg, rgba(48, 12, 22, 0.7) 0%, rgba(20, 6, 12, 0.8) 100%);
+  border: 1px solid rgba(255, 40, 70, 0.38);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.notice-shield-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 38, 63, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 38, 63, 0.3);
+}
+
+.notice-message {
+  font-size: 0.78rem;
+  color: #ded6e3;
+  line-height: 1.45;
+}
+
+/* Action Buttons */
+.auth-submit-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.auth-cancel-btn {
+  flex: 1;
+  background: rgba(26, 20, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  height: 48px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-cancel-btn:hover {
+  background: rgba(42, 28, 38, 0.95);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.auth-submit-btn {
+  flex: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  background: linear-gradient(135deg, #e50914 0%, #b20710 100%);
+  border: 1px solid rgba(255, 80, 100, 0.7);
+  box-shadow: 0 0 20px rgba(229, 9, 20, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  height: 48px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-submit-btn:hover {
+  box-shadow: 0 0 26px rgba(229, 9, 20, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.submit-key-icon {
+  font-size: 1.15rem;
+}
+
+/* Guest Divider & Browse Button */
+.auth-guest-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.4rem 0;
+}
+
+.divider-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 167, 85, 0.55), transparent);
+}
+
+.divider-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #c9a25b;
+  text-transform: uppercase;
+}
+
+.auth-guest-browse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(22, 7, 14, 0.78);
+  border: 1.5px solid rgba(255, 40, 70, 0.55);
+  box-shadow: 0 0 14px rgba(255, 30, 60, 0.2);
+  border-radius: 12px;
+  padding: 0 1.25rem;
+  height: 48px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.auth-guest-browse-btn:hover {
+  background: rgba(38, 12, 24, 0.9);
+  border-color: #ff2642;
+  box-shadow: 0 0 20px rgba(255, 38, 63, 0.35);
+  transform: translateY(-1px);
+}
+
+.guest-btn-text {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Bottom ECG Heart Waveform */
+.auth-bottom-ecg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.45rem;
+  filter: drop-shadow(0 0 6px rgba(255, 38, 63, 0.7));
+}
+
+@media (max-width: 540px) {
+  .portal-auth-card {
+    padding: 1.6rem 1.15rem 1.25rem;
+    border-radius: 22px;
+  }
+  .auth-portal-title {
+    font-size: 1.35rem;
+  }
+  .auth-section-label {
+    font-size: 1.15rem;
+  }
+  .auth-tabs-row {
+    flex-direction: column;
+    gap: 0.4rem;
+    border-radius: 16px;
+  }
+  .auth-tab-btn {
+    width: 100%;
+  }
+  .guest-btn-text {
+    font-size: 0.8rem;
+  }
+}
+
 /* Toast Container */
 .toast-container {
   position: fixed;
