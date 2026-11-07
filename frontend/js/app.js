@@ -1506,27 +1506,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize Network Connectivity & Offline Monitoring
   initNetworkMonitoring();
 
-  // Initial authentication check
-  try {
-    const authCheck = await api.auth.me();
-    store.setUser(authCheck.user, authCheck.donor_profile);
-  } catch (err) {
-    store.setUser(null, null);
-  }
-
-  // Load real database data with skeleton loaders
-  await refreshAllData({ showSkeleton: true });
-  updateUIForAuth();
-  populateChecksheetEdit();
-
-  // First entrance: directly prompt Sign In modal with guest/public view option if unauthenticated
-  const isUserAuthenticated = !!store.state.user || !!localStorage.getItem('access_token') || !!localStorage.getItem('token');
+  // First entrance: directly prompt Sign In modal immediately if unauthenticated
+  const hasStoredToken = !!localStorage.getItem('access_token') || !!localStorage.getItem('token');
   const hasChosenGuest = sessionStorage.getItem('lifepulse_guest_visited');
-  if (!isUserAuthenticated && !hasChosenGuest) {
-    setTimeout(() => {
-      window.openLoginModal();
-    }, 350);
+  if (!hasStoredToken && !hasChosenGuest) {
+    window.openLoginModal();
   }
+
+  // Initial authentication check & background data refresh
+  (async () => {
+    if (hasStoredToken) {
+      try {
+        const authCheck = await api.auth.me();
+        store.setUser(authCheck.user, authCheck.donor_profile);
+      } catch (err) {
+        store.setUser(null, null);
+      }
+    } else {
+      store.setUser(null, null);
+    }
+
+    // Load real database data with skeleton loaders
+    await refreshAllData({ showSkeleton: true });
+    updateUIForAuth();
+    populateChecksheetEdit();
+  })();
 
   // Hash-based direct link routing (#checksheet, #inventory, etc.)
   function handleHashRoute() {
