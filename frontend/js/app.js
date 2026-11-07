@@ -1018,6 +1018,186 @@ function updateUIForAuth() {
 window.updateUIForAuth = updateUIForAuth;
 
 // ==========================================
+// CUSTOM DISTRICT SELECTOR (Hover highlights cursor position; click selects only)
+// ==========================================
+function initCustomDistrictDropdown() {
+  const wrapper = document.getElementById('custom-district-wrapper');
+  const trigger = document.getElementById('custom-district-trigger');
+  const dropdown = document.getElementById('custom-district-dropdown');
+  const label = document.getElementById('search-district-label');
+  const listEl = document.getElementById('custom-district-list');
+  const searchInput = document.getElementById('custom-district-search');
+  const clearBtn = document.getElementById('district-clear-search-btn');
+  const nameDisplay = document.getElementById('custom-district-selected-name');
+  const nativeSelect = document.getElementById('search-district-select');
+
+  if (!wrapper || !trigger || !dropdown || !listEl || !nativeSelect) return;
+
+  const options = Array.from(nativeSelect.options).map(opt => ({
+    value: opt.value,
+    text: opt.text,
+    selected: opt.selected
+  }));
+
+  let currentSelectedValue = nativeSelect.value || 'Chennai';
+
+  function renderList(filterQuery = '') {
+    const q = filterQuery.trim().toLowerCase();
+    const filtered = options.filter(opt => opt.text.toLowerCase().includes(q));
+
+    listEl.innerHTML = '';
+    if (filtered.length === 0) {
+      const emptyLi = document.createElement('li');
+      emptyLi.className = 'custom-district-empty';
+      emptyLi.textContent = 'No matching districts found';
+      listEl.appendChild(emptyLi);
+      return;
+    }
+
+    filtered.forEach(opt => {
+      const li = document.createElement('li');
+      li.className = 'custom-district-item';
+      li.setAttribute('role', 'option');
+      li.setAttribute('data-value', opt.value);
+      if (opt.value === currentSelectedValue) {
+        li.classList.add('is-selected');
+        li.setAttribute('aria-selected', 'true');
+      }
+
+      li.innerHTML = `
+        <span>${opt.text}</span>
+        <svg class="item-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      `;
+
+      // Visual hover highlight follows cursor position without auto-selecting
+      li.addEventListener('pointerenter', () => {
+        listEl.querySelectorAll('.custom-district-item').forEach(i => i.classList.remove('cursor-pointed'));
+        li.classList.add('cursor-pointed');
+      });
+
+      // ONLY on explicit user click: finalize selection
+      li.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectDistrict(opt.value, opt.text);
+        closeDropdown();
+      });
+
+      listEl.appendChild(li);
+    });
+  }
+
+  function selectDistrict(val, labelText) {
+    currentSelectedValue = val;
+    if (nameDisplay) {
+      nameDisplay.textContent = labelText || (val ? val : 'All 38 Districts (Statewide)');
+    }
+    if (nativeSelect.value !== val) {
+      nativeSelect.value = val;
+      nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    listEl.querySelectorAll('.custom-district-item').forEach(item => {
+      const isMatch = item.getAttribute('data-value') === val;
+      item.classList.toggle('is-selected', isMatch);
+      item.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+    });
+  }
+
+  function openDropdown() {
+    wrapper.classList.add('is-open');
+    dropdown.removeAttribute('hidden');
+    trigger.setAttribute('aria-expanded', 'true');
+    renderList(searchInput ? searchInput.value : '');
+
+    requestAnimationFrame(() => {
+      const selectedItem = listEl.querySelector('.custom-district-item.is-selected');
+      if (selectedItem) {
+        selectedItem.scrollIntoView({ block: 'nearest' });
+      }
+      if (window.innerWidth > 768 && searchInput) {
+        searchInput.focus();
+      }
+    });
+  }
+
+  function closeDropdown() {
+    wrapper.classList.remove('is-open');
+    dropdown.setAttribute('hidden', '');
+    trigger.setAttribute('aria-expanded', 'false');
+    if (searchInput) searchInput.value = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+  }
+
+  function toggleDropdown() {
+    if (wrapper.classList.contains('is-open')) {
+      closeDropdown();
+    } else {
+      openDropdown();
+    }
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleDropdown();
+  });
+
+  if (label) {
+    label.addEventListener('click', (e) => {
+      e.preventDefault();
+      trigger.focus();
+      openDropdown();
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value;
+      if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+      renderList(q);
+    });
+
+    searchInput.addEventListener('click', (e) => e.stopPropagation());
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeDropdown();
+        trigger.focus();
+      }
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      searchInput.value = '';
+      clearBtn.style.display = 'none';
+      renderList('');
+      searchInput.focus();
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!wrapper.contains(e.target)) {
+      closeDropdown();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && wrapper.classList.contains('is-open')) {
+      closeDropdown();
+      trigger.focus();
+    }
+  });
+
+  const initialOpt = options.find(o => o.selected) || options.find(o => o.value === 'Chennai');
+  if (initialOpt) {
+    selectDistrict(initialOpt.value, initialOpt.text);
+  }
+}
+window.initCustomDistrictDropdown = initCustomDistrictDropdown;
+
+// ==========================================
 // APPLICATION INITIALIZATION
 // ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1061,7 +1241,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // District filter
+  // District filter & custom accessible selector
   const districtSelect = document.getElementById('search-district-select');
   if (districtSelect) {
     districtSelect.addEventListener('change', (e) => {
@@ -1069,6 +1249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       refreshAllData();
     });
   }
+  initCustomDistrictDropdown();
 
   // Account login form
   const loginForm = document.getElementById('account-login-form');

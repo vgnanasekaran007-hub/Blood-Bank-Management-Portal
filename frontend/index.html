@@ -384,9 +384,43 @@
             <button class="blood-radio-btn" data-blood="O-">O-</button>
           </div>
 
-          <div class="form-group">
-            <label for="search-district-select" class="form-label">Filter by District</label>
-            <select id="search-district-select" class="form-control">
+          <div class="form-group custom-district-container">
+            <label for="custom-district-trigger" class="form-label" id="search-district-label">Filter by District</label>
+            
+            <!-- Accessible Custom District Selector (Cursor highlights, click selects only) -->
+            <div class="custom-district-wrapper" id="custom-district-wrapper">
+              <button type="button" class="custom-district-trigger" id="custom-district-trigger" 
+                      aria-haspopup="listbox" aria-expanded="false" aria-labelledby="search-district-label custom-district-trigger">
+                <span class="district-trigger-content">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="district-pin-icon" aria-hidden="true">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  <span id="custom-district-selected-name" class="district-selected-name">Chennai</span>
+                </span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="district-chevron-icon" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </button>
+
+              <div class="custom-district-dropdown" id="custom-district-dropdown" role="listbox" aria-label="Tamil Nadu Districts" hidden>
+                <div class="district-search-box">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.3-4.3"/>
+                  </svg>
+                  <input type="text" id="custom-district-search" class="district-search-input" placeholder="Type to filter 38 districts..." autocomplete="off">
+                  <button type="button" id="district-clear-search-btn" class="district-clear-btn" aria-label="Clear filter" style="display:none;">&times;</button>
+                </div>
+                
+                <ul class="custom-district-list" id="custom-district-list" tabindex="-1">
+                  <!-- Generated options dynamically rendered with cursor-pointed highlight & explicit click selection -->
+                </ul>
+              </div>
+            </div>
+
+            <!-- Underlying Native Select Kept Fully Synced for Existing Functions & Direct Reference -->
+            <select id="search-district-select" class="visually-hidden-select" tabindex="-1" aria-hidden="true">
               <option value="">All 38 Districts (Statewide)</option>
               <option value="Ariyalur">Ariyalur</option>
               <option value="Chengalpattu">Chengalpattu</option>
@@ -1566,38 +1600,35 @@
         </div>
       </div>
 
-      <!-- Developer Section -->
-      <div class="portal-developer-card">
-        <div class="dev-profile-group">
-          <div class="dev-avatar-box" aria-hidden="true">
-            <span>GV</span>
-          </div>
-          <div class="dev-info-col">
-            <span class="dev-role-kicker">
-              <span class="dev-role-dot"></span>
-              Developed &amp; Engineered By
-            </span>
-            <h4 class="dev-name-heading">Gnanasekaran V</h4>
-            <span class="dev-meta-desc">DevOps Engineer &bull; Full-Stack Architech</span>
-          </div>
-        </div>
-
-        <div class="dev-actions-group">
-          <a href="https://github.com/VGNANASEKARAN007-HUB" target="_blank" rel="noopener noreferrer"
-            class="dev-github-btn" title="View Gnanasekaran V on GitHub"
+      <!-- Developer Section (Exact Design with Dual Verification Badges) -->
+      <div class="developer-badge-section">
+        <h4 class="developer-name-title">Gnanasekaran V</h4>
+        <div class="developer-badges-row">
+          <!-- GitHub Profile Badge -->
+          <a href="https://github.com/vgnanasekaran007-hub" target="_blank" rel="noopener noreferrer"
+            class="dev-badge-shield dev-badge-github" title="Visit Gnanasekaran V on GitHub"
             aria-label="GitHub Profile VGNANASEKARAN007-HUB">
-            <svg class="gh-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path fill-rule="evenodd" clip-rule="evenodd"
-                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-            </svg>
-            <div class="gh-text-box">
-              <span class="gh-label">GitHub Profile</span>
-              <strong class="gh-handle">VGNANASEKARAN007-HUB</strong>
-            </div>
-            <svg class="gh-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2.5" aria-hidden="true">
-              <path d="M7 17L17 7M17 7H7M17 7V17" />
-            </svg>
+            <span class="badge-shield-left">
+              <svg class="badge-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+              </svg>
+              <span>GITHUB</span>
+            </span>
+            <span class="badge-shield-right">VGNANASEKARAN007-HUB</span>
+          </a>
+
+          <!-- Gmail Contact Badge -->
+          <a href="mailto:vgnanasekaran007@gmail.com" class="dev-badge-shield dev-badge-gmail"
+            title="Send Email to Gnanasekaran V" aria-label="Email vgnanasekaran007@gmail.com">
+            <span class="badge-shield-left">
+              <svg class="badge-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path
+                  d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+              </svg>
+              <span>GMAIL</span>
+            </span>
+            <span class="badge-shield-right">VGNANASEKARAN007@GMAIL.COM</span>
           </a>
         </div>
       </div>

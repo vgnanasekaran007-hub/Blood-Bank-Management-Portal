@@ -88,6 +88,72 @@ html {
   font-size: 16px;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 38, 63, 0.45) var(--bg-secondary);
+}
+
+/* ==========================================================================
+   PRECISION SLEEK SCROLLBAR DESIGN SYSTEM
+   Modern, slim, rounded-pill scrollbars with glowing theme accent
+   ========================================================================== */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-subtle);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255, 38, 63, 0.45) 0%, rgba(185, 28, 28, 0.65) 100%);
+  border-radius: 999px;
+  border: 2px solid var(--bg-secondary);
+  transition: all 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff263f 0%, #b91c1c 100%);
+  box-shadow: 0 0 10px rgba(255, 38, 63, 0.6);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--bg-secondary);
+}
+
+/* Container-specific Slim Scrollbars */
+.table-responsive::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar,
+.custom-district-list::-webkit-scrollbar,
+.mobile-nav-body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track,
+.modal-body::-webkit-scrollbar-track,
+.custom-district-list::-webkit-scrollbar-track,
+.mobile-nav-body::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb,
+.modal-body::-webkit-scrollbar-thumb,
+.custom-district-list::-webkit-scrollbar-thumb,
+.mobile-nav-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 38, 63, 0.4);
+  border-radius: 4px;
+  border: 1px solid var(--bg-secondary);
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover,
+.modal-body::-webkit-scrollbar-thumb:hover,
+.custom-district-list::-webkit-scrollbar-thumb:hover,
+.mobile-nav-body::-webkit-scrollbar-thumb:hover {
+  background: var(--btn-primary);
+  box-shadow: 0 0 8px rgba(255, 38, 63, 0.5);
 }
 
 body {
@@ -1388,164 +1454,299 @@ p {
 }
 
 /* ========================================================
-   PORTAL DEVELOPER SPOTLIGHT SECTION
+   PORTAL DEVELOPER SECTION (Matching Exact Badge Design)
    ======================================================== */
-.portal-developer-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-left: 3.5px solid var(--btn-primary);
-  border-radius: 14px;
-  padding: 1.35rem 1.75rem;
-  margin: 2.25rem 0 2rem;
+.developer-badge-section {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  box-shadow: var(--shadow-card);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.portal-developer-card:hover {
-  border-color: var(--border-color);
-  border-left-color: var(--btn-primary);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
-}
-
-.dev-profile-group {
-  display: flex;
-  align-items: center;
-  gap: 1.1rem;
-}
-
-.dev-avatar-box {
-  width: 48px;
-  height: 48px;
+  justify-content: center;
+  gap: 0.85rem;
+  margin: 2.25rem 0 1.75rem;
+  padding: 1.5rem 1.25rem;
+  background: #09080a;
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
-  background: var(--accent-soft);
-  border: 1px solid var(--border-color);
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), var(--shadow-card);
+}
+
+.developer-name-title {
+  margin: 0;
+  color: #ffffff;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+}
+
+.developer-badges-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--btn-primary);
-  font-weight: 800;
-  font-size: 1.1rem;
-  letter-spacing: -0.02em;
-  flex-shrink: 0;
-  box-shadow: inset 0 0 10px rgba(255, 38, 63, 0.08);
+  flex-wrap: wrap;
+  gap: 0.85rem;
 }
 
-.dev-info-col {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.dev-badge-shield {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 4px;
+  overflow: hidden;
+  text-decoration: none;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 0.725rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  line-height: 1;
+  user-select: none;
 }
 
-.dev-role-kicker {
+.dev-badge-shield:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+  filter: brightness(1.12);
+}
+
+.badge-shield-left {
+  background: #4a4a4a;
+  color: #ffffff;
+  padding: 0.6rem 0.8rem;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--btn-secondary);
 }
 
-.dev-role-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--btn-primary);
-  display: inline-block;
-  box-shadow: 0 0 8px var(--btn-primary);
+.badge-shield-left svg {
+  flex-shrink: 0;
 }
 
-.dev-name-heading {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--text-heading);
-  letter-spacing: -0.015em;
-  line-height: 1.2;
-}
-
-.dev-meta-desc {
-  font-size: 0.8125rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
-.dev-actions-group {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.dev-github-btn {
+.dev-badge-github .badge-shield-right {
+  background: #101010;
+  color: #ffffff;
+  padding: 0.6rem 0.95rem;
   display: inline-flex;
   align-items: center;
-  gap: 0.85rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  color: var(--text-heading);
-  padding: 0.65rem 1.15rem;
-  border-radius: 10px;
-  text-decoration: none;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.dev-github-btn .gh-icon {
-  color: var(--text-heading);
-  flex-shrink: 0;
-  transition: transform 0.2s ease;
-}
-
-.dev-github-btn .gh-text-box {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 1.2;
-}
-
-.dev-github-btn .gh-label {
-  font-size: 0.6875rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  font-weight: 600;
+  font-weight: 800;
 }
 
-.dev-github-btn .gh-handle {
-  font-size: 0.8125rem;
-  font-weight: 700;
+.dev-badge-gmail .badge-shield-right {
+  background: #ff002b; /* Vibrant Gmail Red matching screenshot */
+  color: #ffffff;
+  padding: 0.6rem 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+/* ========================================================
+   CUSTOM DISTRICT SELECTOR COMPONENT (ACCESSIBLE & INTUITIVE)
+   Hover highlights cursor position; click explicitly selects
+   ======================================================== */
+.custom-district-container {
+  position: relative;
+}
+
+.custom-district-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.custom-district-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--input-bg);
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
   color: var(--text-heading);
   font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.dev-github-btn .gh-arrow {
-  color: var(--text-muted);
-  margin-left: 0.25rem;
-  transition: transform 0.2s ease, color 0.2s ease;
+.custom-district-trigger:hover {
+  border-color: var(--accent-secondary);
+  background-color: var(--bg-card);
 }
 
-.dev-github-btn:hover {
+.custom-district-trigger:focus-visible,
+.custom-district-wrapper.is-open .custom-district-trigger {
   border-color: var(--btn-primary);
-  background: var(--accent-soft);
-  color: var(--text-heading);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(255, 38, 63, 0.16);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
-.dev-github-btn:hover .gh-arrow {
-  transform: translate(2px, -2px);
+.district-trigger-content {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.district-pin-icon {
+  color: var(--btn-primary);
+  flex-shrink: 0;
+}
+
+.district-selected-name {
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+.district-chevron-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.custom-district-wrapper.is-open .district-chevron-icon {
+  transform: rotate(180deg);
   color: var(--btn-primary);
 }
 
-.dev-github-btn:hover .gh-icon {
-  transform: scale(1.08);
+/* Dropdown Menu Popup */
+.custom-district-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 15px rgba(255, 38, 63, 0.15);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(12px);
+}
+
+.custom-district-wrapper.is-open .custom-district-dropdown {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.district-search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+}
+
+.district-search-box svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.district-search-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-heading);
+  font-size: 0.875rem;
+  outline: none;
+  font-family: inherit;
+}
+
+.district-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.district-clear-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.15rem;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+
+.district-clear-btn:hover {
+  color: var(--btn-primary);
+}
+
+.custom-district-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 0;
+  max-height: 250px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.custom-district-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+  color: var(--text-body);
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+  user-select: none;
+}
+
+/* Hover highlight: strictly visual preview follows cursor without auto-selecting */
+.custom-district-item:hover,
+.custom-district-item.cursor-pointed {
+  background-color: var(--accent-soft);
+  color: var(--text-heading);
+}
+
+.custom-district-item.is-selected {
+  background-color: rgba(255, 38, 63, 0.14);
+  color: var(--btn-primary);
+  font-weight: 600;
+}
+
+.custom-district-item .item-check-icon {
+  opacity: 0;
+  color: var(--btn-primary);
+  transition: opacity 0.15s ease;
+}
+
+.custom-district-item.is-selected .item-check-icon {
+  opacity: 1;
+}
+
+.custom-district-empty {
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.visually-hidden-select {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .dev-github-btn:focus-visible {
@@ -2254,5 +2455,137 @@ p {
 
   .kpi-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   6. LAPTOP & DESKTOP SCALE NORMALIZATION (150% Zoom Effect at 100% Browser Zoom)
+   Eliminates small text/details on laptop screens; scales up typography,
+   buttons, form fields, cards, and icons so 100% zoom looks rich and fit to screen.
+   ========================================================================== */
+@media (min-width: 1025px) {
+  html {
+    font-size: 18.5px; /* Proportional ~116% scale increase across all rem tokens */
+  }
+
+  .container {
+    max-width: 1380px;
+    width: 95%;
+  }
+
+  .hero-card {
+    padding: 2.25rem;
+  }
+
+  .hero-title {
+    font-size: 2.75rem;
+    line-height: 1.15;
+  }
+
+  .hero-subtitle {
+    font-size: 1.05rem;
+  }
+
+  .blood-selector-grid {
+    gap: 0.65rem;
+    margin-bottom: 1.35rem;
+  }
+
+  .blood-radio-btn {
+    padding: 0.85rem 0.45rem;
+    font-size: 1.05rem;
+  }
+
+  .inventory-card {
+    padding: 1.5rem;
+  }
+
+  .inv-group-badge {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1.45rem;
+  }
+
+  .inv-units-val {
+    font-size: 2.35rem;
+  }
+
+  .btn {
+    min-height: 48px;
+    font-size: 0.95rem;
+    padding: 0.75rem 1.35rem;
+  }
+
+  .btn-lg {
+    min-height: 52px;
+    font-size: 1.05rem;
+    padding: 0.85rem 1.6rem;
+  }
+
+  .stat-box-modern {
+    padding: 1.65rem;
+  }
+
+  .stat-val-huge {
+    font-size: 2.6rem;
+  }
+
+  .stat-icon-wrap {
+    width: 44px;
+    height: 44px;
+  }
+
+  .form-control {
+    min-height: 48px;
+    font-size: 0.95rem;
+  }
+
+  .custom-district-trigger {
+    padding: 0.85rem 1.15rem;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+
+  .custom-district-list {
+    max-height: 290px;
+  }
+
+  .custom-district-item {
+    padding: 0.75rem 1.15rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  html {
+    font-size: 19.5px; /* Natural ~122% scale increase for standard widescreen */
+  }
+
+  .container {
+    max-width: 1460px;
+    width: 95%;
+  }
+
+  .hero-grid {
+    gap: 3rem;
+  }
+
+  .inventory-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.35rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  html {
+    font-size: 20.5px; /* ~128% scale for full HD 1080p laptop screen at 100% zoom */
+  }
+
+  .container {
+    max-width: 1560px;
+  }
+
+  .hero-card {
+    padding: 2.5rem;
   }
 }
