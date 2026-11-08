@@ -696,6 +696,15 @@ window.refreshAllData = refreshAllData;
 // GLOBAL EVENT HOOKS & NAVIGATION
 // ==========================================
 window.switchModule = function (moduleName, shouldScroll = true) {
+  // Strict access guard: only authenticated staff administrators can access admin console
+  if (moduleName === 'admin_console') {
+    if (!store.state.user || store.state.role !== 'admin') {
+      showToast('Staff Administrator authentication required to access Console.', 'warning');
+      window.openLoginModal();
+      return;
+    }
+  }
+
   store.setModule(moduleName);
   document.querySelectorAll('.app-module-section').forEach(el => el.classList.remove('active'));
   const target = document.getElementById(`module-${moduleName}`);
@@ -789,13 +798,13 @@ window.switchRole = async function (role) {
 
   try {
     if (role === 'admin') {
-      const res = await api.auth.login('admin', 'admin123');
-      showToast('Logged in as Staff Administrator', 'success');
-      store.setUser(res.user, res.donor_profile || null);
-      await refreshAllData();
-      updateUIForAuth();
-      populateChecksheetEdit();
-      window.switchModule('admin_console', true);
+      if (store.state.user && store.state.role === 'admin') {
+        window.switchModule('admin_console', true);
+        showToast('Viewing Staff Administrator Console', 'info');
+      } else {
+        showToast('Please sign in with administrator credentials to access Staff Console.', 'warning');
+        window.openLoginModal();
+      }
     } else {
       await api.auth.logout();
       showToast('Switched to Public View', 'info');
@@ -1079,6 +1088,11 @@ function updateUIForAuth() {
   document.querySelectorAll('.role-menu-item').forEach(item => {
     item.classList.toggle('active', item.dataset.role === role);
   });
+
+  // Strict access guard: non-admin users cannot remain on admin console
+  if (role !== 'admin' && store.state.activeModule === 'admin_console') {
+    window.switchModule('search');
+  }
 }
 
 window.updateUIForAuth = updateUIForAuth;
@@ -1586,6 +1600,14 @@ async function initLifePulseApp() {
       window.switchModule('requests');
     } else if (hash === '#portal' || hash === '#donor') {
       window.switchModule('donor_portal');
+    } else if (hash === '#admin' || hash === '#console') {
+      if (store.state.user && store.state.role === 'admin') {
+        window.switchModule('admin_console');
+      } else {
+        window.switchModule('search');
+        showToast('Staff Administrator authentication required to enter Console.', 'warning');
+        window.openLoginModal();
+      }
     }
   }
 

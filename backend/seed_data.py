@@ -151,22 +151,23 @@ SAMPLE_DONORS = [
 def init_database():
     print("Initializing production database state...")
 
-    # 1. Administrator Account
+    # 1. Administrator Account (Gnanasekaran Velayutham)
     admin_user, created = User.objects.get_or_create(
-        username='admin',
+        username='Gnanasekaran_Velayutham',
         defaults={
-            'email': 'admin@lifepulse.org',
-            'first_name': 'Admin',
-            'last_name': 'Portal',
+            'email': 'gnanasekaranvel07@gmail.com',
+            'first_name': 'Gnanasekaran',
+            'last_name': 'Velayutham',
             'is_staff': True,
             'is_superuser': True
         }
     )
-    admin_user.set_password('admin123')
-    admin_user.first_name = 'Admin'
-    admin_user.last_name = 'Portal'
+    admin_user.email = 'gnanasekaranvel07@gmail.com'
+    admin_user.first_name = 'Gnanasekaran'
+    admin_user.last_name = 'Velayutham'
     admin_user.is_staff = True
     admin_user.is_superuser = True
+    admin_user.set_password('admin@123')
     admin_user.save()
 
     UserProfile.objects.update_or_create(
@@ -179,7 +180,36 @@ def init_database():
             'state': 'Tamil Nadu'
         }
     )
-    print("-> Staff Administrator account verified (username: 'admin')")
+    print("-> Staff Administrator account verified (username: 'Gnanasekaran_Velayutham', email: 'gnanasekaranvel07@gmail.com')")
+
+    # Also synchronize secondary alias 'admin' account if present
+    alias_admin, _ = User.objects.get_or_create(
+        username='admin',
+        defaults={
+            'email': 'gnanasekaranvel07@gmail.com',
+            'first_name': 'Gnanasekaran',
+            'last_name': 'Velayutham',
+            'is_staff': True,
+            'is_superuser': True
+        }
+    )
+    alias_admin.email = 'gnanasekaranvel07@gmail.com'
+    alias_admin.first_name = 'Gnanasekaran'
+    alias_admin.last_name = 'Velayutham'
+    alias_admin.is_staff = True
+    alias_admin.is_superuser = True
+    alias_admin.set_password('admin@123')
+    alias_admin.save()
+    UserProfile.objects.update_or_create(
+        user=alias_admin,
+        defaults={
+            'role': 'admin',
+            'phone_number': '9840112233',
+            'city': 'Chennai',
+            'district': 'Chennai',
+            'state': 'Tamil Nadu'
+        }
+    )
 
     # 2. Initialize all 8 blood groups with realistic stock balances
     total_units = 0

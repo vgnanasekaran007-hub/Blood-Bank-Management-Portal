@@ -137,12 +137,22 @@ class LoginView(views.APIView):
 
         user = authenticate(request, username=username, password=password)
         if user is None:
-            # Try finding user by email as well
-            try:
-                user_obj = User.objects.get(email=username)
+            raw_input = (username or '').strip()
+            # 1. Match by email (e.g. gnanasekaranvel07@gmail.com)
+            user_obj = User.objects.filter(email__iexact=raw_input).first()
+            # 2. Match by full name with space (e.g. "Gnanasekaran Velayutham")
+            if not user_obj and ' ' in raw_input:
+                parts = raw_input.split(None, 1)
+                user_obj = User.objects.filter(first_name__iexact=parts[0], last_name__iexact=parts[1]).first()
+            # 3. Match by normalized username (e.g. "Gnanasekaran_Velayutham")
+            if not user_obj:
+                norm = raw_input.replace(' ', '_')
+                user_obj = User.objects.filter(username__iexact=norm).first()
+            if not user_obj:
+                user_obj = User.objects.filter(username__iexact=raw_input).first()
+
+            if user_obj:
                 user = authenticate(request, username=user_obj.username, password=password)
-            except User.DoesNotExist:
-                user = None
 
         if user is not None:
             if not user.is_active:
