@@ -1815,18 +1815,20 @@ p {
    DONOR REGISTRATION PORTAL (Exact Clone of Reference Image)
    ======================================================== */
 .portal-reg-card {
-  max-width: 740px;
+  max-width: 720px;
   width: 100%;
-  border-radius: 30px;
+  border-radius: 26px;
   background: radial-gradient(circle at 50% 0%, rgba(55, 12, 24, 0.6) 0%, rgba(14, 6, 12, 0.96) 65%), #0c0509;
   border: 1.5px solid rgba(255, 38, 63, 0.65);
   box-shadow: 0 0 35px rgba(255, 30, 60, 0.45), inset 0 0 25px rgba(255, 30, 60, 0.15), 0 25px 60px rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
-  padding: 2.2rem 2.25rem 1.85rem;
+  padding: 1.6rem 2rem 1.35rem;
   position: relative;
   overflow-y: auto;
+  overflow-x: hidden !important;
   max-height: calc(100vh - 2.5rem);
+  box-sizing: border-box !important;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 38, 63, 0.4) transparent;
   transform: translateY(18px);
@@ -1840,27 +1842,80 @@ p {
   transform: translateY(0);
 }
 
+.portal-reg-card .auth-emblem-wrap {
+  margin-bottom: 0.45rem;
+}
+
+.portal-reg-card .auth-emblem-img {
+  width: 62px;
+  height: 62px;
+}
+
 .reg-portal-title {
   font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
-  font-size: 1.55rem;
+  font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   color: #faede0;
-  margin: 0 0 0.5rem;
-  line-height: 1.25;
+  margin: 0 0 0.35rem;
+  line-height: 1.2;
   text-align: center;
+}
+
+.portal-reg-card .auth-sub-slogan {
+  margin-bottom: 0.45rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+}
+
+.portal-reg-card .auth-section-divider {
+  margin: 0.35rem 0 0.55rem;
+}
+
+.portal-reg-card .auth-desc-text {
+  margin-bottom: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .reg-grid-2col {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.15rem 1.25rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.85rem 1.15rem;
   margin-bottom: 0.35rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.portal-reg-card .auth-field-group {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.portal-reg-card .auth-input-container {
+  height: 44px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0 0.8rem;
+}
+
+.portal-reg-card .auth-text-input,
+.portal-reg-card .auth-select-input,
+.portal-reg-card .auth-date-input {
+  min-width: 0;
+  max-width: 100%;
+  font-size: 0.88rem;
+  box-sizing: border-box;
 }
 
 .auth-select-container {
   position: relative;
   cursor: pointer;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .auth-select-input {
@@ -1869,7 +1924,7 @@ p {
   border: none;
   outline: none;
   color: #ffffff;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-family: inherit;
   cursor: pointer;
   appearance: none;
@@ -1900,29 +1955,80 @@ p {
 }
 
 .reg-privacy-notice {
-  margin-top: 0.25rem;
+  margin-top: 0.35rem;
+  padding: 0.65rem 0.85rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.reg-privacy-notice .notice-message {
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .reg-submit-row {
-  margin-top: 0.5rem;
+  margin-top: 0.65rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.portal-reg-card .auth-cancel-btn {
+  height: 44px;
+  padding: 0 1.25rem;
+  font-size: 0.92rem;
 }
 
 .reg-complete-btn {
   flex: 2;
-  font-size: 1rem;
+  height: 44px;
+  font-size: 0.95rem;
 }
 
 @media (max-width: 680px) {
   .portal-reg-card {
-    padding: 1.6rem 1.15rem 1.25rem;
-    border-radius: 22px;
+    padding: 1.25rem 0.95rem 1rem;
+    border-radius: 20px;
+    max-height: calc(100vh - 1.5rem);
+    width: 100%;
   }
-  .reg-grid-2col {
-    grid-template-columns: 1fr;
-    gap: 0.95rem;
+  .portal-reg-card .auth-emblem-img {
+    width: 48px;
+    height: 48px;
   }
   .reg-portal-title {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
+    line-height: 1.2;
+  }
+  .portal-reg-card .auth-sub-slogan {
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+  }
+  .reg-grid-2col {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+  .portal-reg-card .auth-input-container {
+    height: 42px;
+    padding: 0 0.7rem;
+  }
+  .portal-reg-card .auth-text-input,
+  .portal-reg-card .auth-select-input,
+  .portal-reg-card .auth-date-input {
+    font-size: 0.85rem;
+  }
+  .reg-submit-row {
+    flex-direction: column-reverse;
+    gap: 0.6rem;
+  }
+  .portal-reg-card .auth-cancel-btn {
+    width: 100%;
+    height: 42px;
+  }
+  .reg-complete-btn {
+    width: 100%;
+    height: 44px;
   }
 }
 

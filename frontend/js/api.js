@@ -47,8 +47,13 @@ async function request(endpoint, options = {}) {
     headers['X-CSRFToken'] = csrftoken;
   }
 
+  const controller = new AbortController();
+  const timeoutMs = options.timeout || (endpoint === '/health/' ? 6000 : 10000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   const config = {
     ...options,
+    signal: controller.signal,
     headers,
     credentials: 'include', // sends session cookies cross-origin / same-origin
   };
@@ -86,8 +91,16 @@ async function request(endpoint, options = {}) {
 
     return data;
   } catch (err) {
+    if (err.name === 'AbortError') {
+      const abortErr = new Error(`Request timed out after ${timeoutMs}ms: [${options.method || 'GET'} ${endpoint}]`);
+      abortErr.isTimeout = true;
+      console.warn(abortErr.message);
+      throw abortErr;
+    }
     console.error(`API Error on [${options.method || 'GET'} ${endpoint}]:`, err);
     throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

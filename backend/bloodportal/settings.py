@@ -74,12 +74,15 @@ WSGI_APPLICATION = 'bloodportal.wsgi.application'
 # Supabase PostgreSQL connectivity via DATABASE_URL; fallback to local SQLite for development
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
+    db_config = dj_database_url.config(
+        default=DATABASE_URL,
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+    # Prevent slow or paused Supabase instances from hanging worker threads
+    db_config.setdefault('OPTIONS', {})['connect_timeout'] = 5
     DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
+        'default': db_config
     }
 else:
     DATABASES = {
