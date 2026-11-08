@@ -361,46 +361,67 @@
           </div>
         </div>
 
-        <!-- Find Blood Group Card -->
+        <!-- Find Blood Group Card (Exact Clone of User Reference Image 4) -->
         <div class="find-blood-card">
-          <div class="card-title-row">
-            <div class="card-icon-badge" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path
-                  d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-              </svg>
+          <div class="card-title-row find-blood-header-row">
+            <div class="find-blood-logo-badge" aria-hidden="true">
+              <img src="assets/logo.png" alt="LifePulse Emblem" class="find-blood-logo-img">
             </div>
-            <div>
-              <h3>Find Blood Group</h3>
-              <p>Check available blood units in nearby blood banks.</p>
+            <div class="find-blood-header-divider" aria-hidden="true"></div>
+            <div class="find-blood-header-text">
+              <h3 class="find-blood-heading">Find Blood Group</h3>
+              <p class="find-blood-subheading">Check available blood units in nearby blood banks.</p>
             </div>
           </div>
 
+          <div class="blood-selector-header-label">Select Blood Group</div>
+
           <div class="blood-selector-grid" role="radiogroup" aria-label="Select Blood Group">
-            <button class="blood-radio-btn" data-blood="A+">A+</button>
-            <button class="blood-radio-btn" data-blood="A-">A-</button>
-            <button class="blood-radio-btn" data-blood="B+">B+</button>
-            <button class="blood-radio-btn" data-blood="B-">B-</button>
-            <button class="blood-radio-btn" data-blood="AB+">AB+</button>
-            <button class="blood-radio-btn" data-blood="AB-">AB-</button>
-            <button class="blood-radio-btn selected" data-blood="O+">O+</button>
-            <button class="blood-radio-btn" data-blood="O-">O-</button>
+            <button type="button" class="blood-radio-btn" data-blood="A+">A+</button>
+            <button type="button" class="blood-radio-btn" data-blood="A-">A-</button>
+            <button type="button" class="blood-radio-btn" data-blood="B+">B+</button>
+            <button type="button" class="blood-radio-btn" data-blood="B-">B-</button>
+            <button type="button" class="blood-radio-btn" data-blood="AB+">AB+</button>
+            <button type="button" class="blood-radio-btn" data-blood="AB-">AB-</button>
+            <button type="button" class="blood-radio-btn selected" data-blood="O+">
+              O+
+              <span class="bg-selected-checkmark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#cf0022" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+            </button>
+            <button type="button" class="blood-radio-btn" data-blood="O-">O-</button>
           </div>
 
           <div class="form-group custom-district-container">
-            <label for="custom-district-trigger" class="form-label" id="search-district-label">Filter by District</label>
+            <div class="district-filter-label-row">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff1a3c" stroke="none" class="district-filter-header-pin" aria-hidden="true">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+              </svg>
+              <label for="custom-district-trigger" class="form-label district-filter-title" id="search-district-label">Filter by District</label>
+            </div>
             
-            <!-- Accessible Custom District Selector (Cursor highlights, click selects only) -->
+            <!-- Accessible Custom District Selector with Tamil Nadu Temple Skyline Silhouette (Matching Image 4) -->
             <div class="custom-district-wrapper" id="custom-district-wrapper">
               <button type="button" class="custom-district-trigger" id="custom-district-trigger" 
                       aria-haspopup="listbox" aria-expanded="false" aria-labelledby="search-district-label custom-district-trigger">
                 <span class="district-trigger-content">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="district-pin-icon" aria-hidden="true">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
+                  <span class="district-pin-badge">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff1a3c" stroke="none" aria-hidden="true">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+                    </svg>
+                  </span>
                   <span id="custom-district-selected-name" class="district-selected-name">Chennai</span>
                 </span>
+
+                <!-- Tamil Nadu Temple Skyline Silhouette Graphic -->
+                <div class="district-skyline-bg" aria-hidden="true">
+                  <svg class="district-skyline-svg" viewBox="0 0 220 40" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                    <path d="M0 40 L0 36 Q10 36 15 32 L22 32 L22 26 L27 26 L27 22 L31 22 L31 16 L33 16 L33 12 L35 12 L35 9 L36 9 L36 6 L37 6 L37 9 L38 9 L38 12 L40 12 L40 16 L42 16 L42 22 L46 22 L46 26 L51 26 L51 32 L58 32 Q63 36 70 36 L85 36 L85 30 L87 30 L87 25 L89 25 L89 22 L91 22 L91 18 L93 18 L93 22 L95 22 L95 25 L97 25 L97 30 L99 30 L99 36 L115 36 L115 28 L118 28 L118 22 L121 22 L121 15 L124 15 L124 9 L126 9 L126 4 L127 4 L127 1 L128 1 L128 4 L129 4 L129 9 L131 9 L131 15 L134 15 L134 22 L137 22 L137 28 L140 28 L140 36 L160 36 L163 33 L166 36 L175 36 L175 31 L178 31 L178 27 L180 27 L180 31 L183 31 L183 36 L220 36 L220 40 Z" fill="#660d1f" opacity="0.6"/>
+                  </svg>
+                </div>
+
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="district-chevron-icon" aria-hidden="true">
                   <path d="m6 9 6 6 6-6"/>
                 </svg>
@@ -466,13 +487,10 @@
             </select>
           </div>
 
-          <button class="btn btn-primary" style="width: 100%;" onclick="searchAvailabilityAndScroll()"
+          <button class="hero-search-availability-btn" onclick="searchAvailabilityAndScroll()"
             id="search-availability-btn" title="Search matching donors and view availability">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-            Search Availability
+            <span>Search Availability</span>
+            <span class="search-btn-double-chevron" aria-hidden="true">&gt;&gt;</span>
           </button>
         </div>
       </div>
@@ -1829,6 +1847,91 @@
           </svg>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL 5: CUSTOM CONFIRM / PROMPT / ALERT MODAL (EXACT CLONE OF REFERENCE IMAGE 2)
+       ======================================================== -->
+  <div id="custom-confirm-modal" class="popup-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="custom-popup-title" style="display: none;">
+    <div class="popup-modal-card">
+      <!-- Top Row: Squircle Logo Badge, Title & Close Button -->
+      <div class="popup-top-row">
+        <div class="popup-title-group">
+          <div class="popup-logo-badge" aria-hidden="true">
+            <img src="assets/logo.png" alt="LifePulse Emblem" class="popup-logo-img">
+          </div>
+          <h3 id="custom-popup-title" class="popup-title">Confirm <span class="popup-title-red">Action</span></h3>
+        </div>
+        <button type="button" id="custom-popup-close-btn" class="popup-close-btn" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <!-- Middle Content Row: Message & Translucent Blood Bag Graphic -->
+      <div class="popup-content-row">
+        <div class="popup-body-text-wrap">
+          <div id="custom-popup-message" class="popup-message">
+            <!-- Dynamic text or formatted HTML injected here -->
+          </div>
+          <div id="custom-popup-input-container" class="popup-input-container" style="display: none;">
+            <input type="text" id="custom-popup-input" class="popup-text-input" placeholder="Enter value..." autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Stylized Blood Infusion Bag Graphic (matching Image 2) -->
+        <div class="popup-blood-bag-wrap" aria-hidden="true">
+          <svg class="popup-blood-bag-svg" viewBox="0 0 70 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Hanger loop -->
+            <path d="M28 6 C28 2, 42 2, 42 6 L42 12 L28 12 Z" stroke="rgba(255, 40, 70, 0.6)" stroke-width="2" fill="none"/>
+            <rect x="25" y="11" width="20" height="3" rx="1.5" fill="rgba(255, 40, 70, 0.7)"/>
+            <!-- Bag main pouch -->
+            <rect x="8" y="14" width="54" height="66" rx="12" fill="rgba(20, 8, 12, 0.85)" stroke="rgba(255, 30, 60, 0.8)" stroke-width="2"/>
+            <!-- Red blood liquid inside -->
+            <path d="M10 36 C10 36, 20 38, 35 38 C50 38, 60 36, 60 36 L60 68 C60 74, 54 78, 48 78 L22 78 C16 78, 10 74, 10 68 Z" fill="url(#bloodBagGradient)" opacity="0.85"/>
+            <!-- Subtle graduation markings on the right -->
+            <line x1="52" y1="38" x2="57" y2="38" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+            <line x1="50" y1="46" x2="57" y2="46" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+            <line x1="52" y1="54" x2="57" y2="54" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+            <line x1="50" y1="62" x2="57" y2="62" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+            <!-- Red Blood Droplet Emblem in Center -->
+            <path d="M35 44 C35 44, 27 54, 27 60 C27 64.4, 30.6 68, 35 68 C39.4 68, 43 64.4, 43 60 C43 54, 35 44, 35 44 Z" fill="#ff1a3c" filter="drop-shadow(0 0 6px #ff1a3c)"/>
+            <!-- Bottom port -->
+            <rect x="31" y="80" width="8" height="6" rx="2" fill="rgba(255, 40, 70, 0.9)"/>
+            <!-- Tubing line exiting and curling down -->
+            <path d="M35 86 C35 96, 26 100, 24 108" stroke="#ff1a3c" stroke-width="2.5" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="bloodBagGradient" x1="35" y1="36" x2="35" y2="78" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#b30018" stop-opacity="0.9"/>
+                <stop offset="1" stop-color="#6a000e" stop-opacity="0.95"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Bottom Row: ECG Waveform on left & Action Buttons on right -->
+      <div class="popup-bottom-row">
+        <div class="popup-ecg-wrap" aria-hidden="true">
+          <svg class="popup-ecg-svg" viewBox="0 0 160 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 25 L35 25 L45 10 L52 35 L60 5 L68 30 L74 20 L80 25 L160 25" stroke="#ff1a3c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <div class="popup-actions-group">
+          <button type="button" id="custom-popup-cancel-btn" class="popup-btn-cancel">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            <span id="custom-popup-cancel-text">Cancel</span>
+          </button>
+          <button type="button" id="custom-popup-ok-btn" class="popup-btn-ok">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span id="custom-popup-ok-text">OK</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

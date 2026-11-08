@@ -823,17 +823,24 @@ window.handleLogout = async function () {
   return window.switchRole('guest');
 };
 
-window.copyChecksheetLink = function () {
+window.copyChecksheetLink = async function () {
   const url = `${window.location.origin}${window.location.pathname}#checksheet`;
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url).then(() => {
+    try {
+      await navigator.clipboard.writeText(url);
       showToast('Checksheet link copied to clipboard! You can share this link with real users/donors.', 'success');
-    }).catch(() => {
-      prompt('Copy this checksheet link to share with real users:', url);
-    });
-  } else {
-    prompt('Copy this checksheet link to share with real users:', url);
+      return;
+    } catch (err) {
+      // Fallback to custom popup prompt
+    }
   }
+  await window.showCustomPrompt({
+    title: 'Checksheet <span class="popup-title-red">Link</span>',
+    htmlMessage: 'Copy this checksheet link to share with voluntary blood donors:',
+    defaultValue: url,
+    okText: 'Done',
+    cancelText: 'Close'
+  });
 };
 
 window.setChecksheetMode = function (mode) {
@@ -992,8 +999,233 @@ window.openLogDonationModal = function () {
   if (modal) modal.classList.add('open');
 };
 
+/**
+ * Custom Glowing Crimson Popup Modal (Exact Clone of User Reference Image 2)
+ * Eliminates all native browser confirm/prompt/alert dialogs.
+ */
+window.showCustomConfirm = function ({
+  title = 'Confirm <span class="popup-title-red">Action</span>',
+  message = '',
+  htmlMessage = null,
+  okText = 'OK',
+  cancelText = 'Cancel',
+  bloodBadge = null
+} = {}) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('custom-confirm-modal');
+    if (!modal) {
+      resolve(true);
+      return;
+    }
+
+    const titleEl = document.getElementById('custom-popup-title');
+    const msgEl = document.getElementById('custom-popup-message');
+    const inputContainer = document.getElementById('custom-popup-input-container');
+    const cancelBtn = document.getElementById('custom-popup-cancel-btn');
+    const okBtn = document.getElementById('custom-popup-ok-btn');
+    const closeBtn = document.getElementById('custom-popup-close-btn');
+    const okTextEl = document.getElementById('custom-popup-ok-text');
+    const cancelTextEl = document.getElementById('custom-popup-cancel-text');
+
+    if (titleEl) titleEl.innerHTML = title;
+
+    if (msgEl) {
+      if (htmlMessage) {
+        msgEl.innerHTML = htmlMessage;
+      } else {
+        let formatted = message;
+        if (bloodBadge) {
+          formatted = formatted.replace(bloodBadge, `<span class="popup-blood-badge">${bloodBadge}</span>`);
+        }
+        msgEl.innerHTML = formatted;
+      }
+    }
+
+    if (inputContainer) inputContainer.style.display = 'none';
+    if (cancelBtn) cancelBtn.style.display = 'inline-flex';
+    if (okTextEl) okTextEl.textContent = okText;
+    if (cancelTextEl) cancelTextEl.textContent = cancelText;
+
+    modal.style.display = 'flex';
+    modal.classList.add('open');
+
+    function cleanup() {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+      okBtn?.removeEventListener('click', onOk);
+      cancelBtn?.removeEventListener('click', onCancel);
+      closeBtn?.removeEventListener('click', onCancel);
+      window.removeEventListener('keydown', onKey);
+    }
+
+    function onOk() {
+      cleanup();
+      resolve(true);
+    }
+
+    function onCancel() {
+      cleanup();
+      resolve(false);
+    }
+
+    function onKey(e) {
+      if (e.key === 'Escape') onCancel();
+      else if (e.key === 'Enter') onOk();
+    }
+
+    okBtn?.addEventListener('click', onOk);
+    cancelBtn?.addEventListener('click', onCancel);
+    closeBtn?.addEventListener('click', onCancel);
+    window.addEventListener('keydown', onKey);
+    okBtn?.focus();
+  });
+};
+
+window.showCustomPrompt = function ({
+  title = 'Action <span class="popup-title-red">Input</span>',
+  message = '',
+  htmlMessage = null,
+  defaultValue = '',
+  placeholder = 'Enter value...',
+  okText = 'OK',
+  cancelText = 'Cancel'
+} = {}) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('custom-confirm-modal');
+    if (!modal) {
+      resolve(defaultValue);
+      return;
+    }
+
+    const titleEl = document.getElementById('custom-popup-title');
+    const msgEl = document.getElementById('custom-popup-message');
+    const inputContainer = document.getElementById('custom-popup-input-container');
+    const inputEl = document.getElementById('custom-popup-input');
+    const cancelBtn = document.getElementById('custom-popup-cancel-btn');
+    const okBtn = document.getElementById('custom-popup-ok-btn');
+    const closeBtn = document.getElementById('custom-popup-close-btn');
+    const okTextEl = document.getElementById('custom-popup-ok-text');
+    const cancelTextEl = document.getElementById('custom-popup-cancel-text');
+
+    if (titleEl) titleEl.innerHTML = title;
+    if (msgEl) msgEl.innerHTML = htmlMessage || message;
+    if (inputContainer) inputContainer.style.display = 'block';
+    if (inputEl) {
+      inputEl.value = defaultValue;
+      inputEl.placeholder = placeholder;
+    }
+    if (cancelBtn) cancelBtn.style.display = 'inline-flex';
+    if (okTextEl) okTextEl.textContent = okText;
+    if (cancelTextEl) cancelTextEl.textContent = cancelText;
+
+    modal.style.display = 'flex';
+    modal.classList.add('open');
+
+    function cleanup() {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+      okBtn?.removeEventListener('click', onOk);
+      cancelBtn?.removeEventListener('click', onCancel);
+      closeBtn?.removeEventListener('click', onCancel);
+      window.removeEventListener('keydown', onKey);
+    }
+
+    function onOk() {
+      const val = inputEl ? inputEl.value : '';
+      cleanup();
+      resolve(val);
+    }
+
+    function onCancel() {
+      cleanup();
+      resolve(null);
+    }
+
+    function onKey(e) {
+      if (e.key === 'Escape') onCancel();
+      else if (e.key === 'Enter') onOk();
+    }
+
+    okBtn?.addEventListener('click', onOk);
+    cancelBtn?.addEventListener('click', onCancel);
+    closeBtn?.addEventListener('click', onCancel);
+    window.addEventListener('keydown', onKey);
+    setTimeout(() => {
+      inputEl?.focus();
+      inputEl?.select();
+    }, 60);
+  });
+};
+
+window.showCustomAlert = function ({
+  title = 'System <span class="popup-title-red">Notice</span>',
+  message = '',
+  htmlMessage = null,
+  okText = 'OK'
+} = {}) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('custom-confirm-modal');
+    if (!modal) {
+      resolve();
+      return;
+    }
+
+    const titleEl = document.getElementById('custom-popup-title');
+    const msgEl = document.getElementById('custom-popup-message');
+    const inputContainer = document.getElementById('custom-popup-input-container');
+    const cancelBtn = document.getElementById('custom-popup-cancel-btn');
+    const okBtn = document.getElementById('custom-popup-ok-btn');
+    const closeBtn = document.getElementById('custom-popup-close-btn');
+    const okTextEl = document.getElementById('custom-popup-ok-text');
+
+    if (titleEl) titleEl.innerHTML = title;
+    if (msgEl) msgEl.innerHTML = htmlMessage || message;
+    if (inputContainer) inputContainer.style.display = 'none';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    if (okTextEl) okTextEl.textContent = okText;
+
+    modal.style.display = 'flex';
+    modal.classList.add('open');
+
+    function cleanup() {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+      okBtn?.removeEventListener('click', onOk);
+      closeBtn?.removeEventListener('click', onOk);
+      window.removeEventListener('keydown', onKey);
+    }
+
+    function onOk() {
+      cleanup();
+      resolve();
+    }
+
+    function onKey(e) {
+      if (e.key === 'Escape' || e.key === 'Enter') onOk();
+    }
+
+    okBtn?.addEventListener('click', onOk);
+    closeBtn?.addEventListener('click', onOk);
+    window.addEventListener('keydown', onKey);
+    okBtn?.focus();
+  });
+};
+
+// Global fallback override for alert
+window.alert = function (msg) {
+  window.showCustomAlert({ message: String(msg) });
+};
+
 window.fulfillBloodRequest = async function (requestId, bloodGroup, unitsNeeded, skipConfirm = false) {
-  if (!skipConfirm && !confirm(`Confirm atomic stock fulfillment for Request #${requestId}: Deduct ${unitsNeeded} unit(s) of ${bloodGroup}?`)) return;
+  if (!skipConfirm) {
+    const confirmed = await window.showCustomConfirm({
+      title: 'Confirm <span class="popup-title-red">Action</span>',
+      htmlMessage: `Confirm atomic stock fulfillment for <strong>Request #${requestId}</strong>:<br>Deduct <strong>${unitsNeeded} units</strong> of <span class="popup-blood-badge">${bloodGroup}</span>`,
+      okText: 'OK',
+      cancelText: 'Cancel'
+    });
+    if (!confirmed) return;
+  }
 
   try {
     await api.requests.updateStatus(requestId, 'FULFILLED', 'Authorized and dispatched by blood bank staff.');
@@ -1007,7 +1239,14 @@ window.fulfillBloodRequest = async function (requestId, bloodGroup, unitsNeeded,
 window.updateRequestStatus = async function (requestId, newStatus, optionalRemark) {
   let remark = optionalRemark;
   if (optionalRemark === undefined) {
-    remark = prompt(`Enter optional remarks for status '${newStatus}':`, '');
+    remark = await window.showCustomPrompt({
+      title: `Update <span class="popup-title-red">Status (${newStatus})</span>`,
+      htmlMessage: `Enter optional remarks or clinical notes for updating Request <strong>#${requestId}</strong> to <strong>${newStatus}</strong>:`,
+      defaultValue: '',
+      placeholder: 'e.g. Authorized and dispatched by staff...',
+      okText: 'Update Status',
+      cancelText: 'Cancel'
+    });
     if (remark === null) return;
   }
 
@@ -1021,7 +1260,14 @@ window.updateRequestStatus = async function (requestId, newStatus, optionalRemar
 };
 
 window.cancelRequest = async function (requestId) {
-  if (!confirm('Are you sure you want to cancel this blood request?')) return;
+  const confirmed = await window.showCustomConfirm({
+    title: 'Confirm <span class="popup-title-red">Cancellation</span>',
+    htmlMessage: `Are you sure you want to cancel blood request <strong>#${requestId}</strong>? This action will mark the request as CANCELLED.`,
+    okText: 'Cancel Request',
+    cancelText: 'Keep Request'
+  });
+  if (!confirmed) return;
+
   try {
     await api.requests.updateStatus(requestId, 'CANCELLED', 'Cancelled by requester');
     showToast('Blood request cancelled.', 'info');
@@ -1035,10 +1281,25 @@ window.verifyDonationRecord = async function (donationId, decision, optionalNote
   let notes = optionalNotes !== undefined ? optionalNotes : '';
   let reason = optionalReason !== undefined ? optionalReason : '';
   if (decision === 'REJECTED' && optionalReason === undefined) {
-    reason = prompt('Enter specific reason for rejecting this donation record:', 'Hemoglobin below clinical threshold (<12.5 g/dL)');
+    reason = await window.showCustomPrompt({
+      title: 'Clinical <span class="popup-title-red">Rejection Reason</span>',
+      htmlMessage: `Enter specific medical or clinical reason for rejecting donation record <strong>#${donationId}</strong>:`,
+      defaultValue: 'Hemoglobin below clinical threshold (<12.5 g/dL)',
+      placeholder: 'Specify rejection criteria...',
+      okText: 'Confirm Rejection',
+      cancelText: 'Cancel'
+    });
     if (!reason) return;
   } else if (decision === 'VERIFIED' && optionalNotes === undefined) {
-    notes = prompt('Enter optional clinical verification notes:', 'Blood unit screened and verified normal.');
+    notes = await window.showCustomPrompt({
+      title: 'Clinical <span class="popup-title-red">Verification Notes</span>',
+      htmlMessage: `Enter optional clinical screening notes for verified donation unit <strong>#${donationId}</strong>:`,
+      defaultValue: 'Blood unit screened and verified normal.',
+      placeholder: 'Screening lab notes...',
+      okText: 'Approve & Stock',
+      cancelText: 'Cancel'
+    });
+    if (notes === null) return;
   }
 
   try {
@@ -1310,11 +1571,22 @@ async function initLifePulseApp() {
     updateUIForAuth();
   });
 
-  // Hero blood selector buttons
+  // Hero blood selector buttons (Exact match of Reference Image 4 with checkmark)
   document.querySelectorAll('.blood-radio-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.blood-radio-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('.blood-radio-btn').forEach(b => {
+        b.classList.remove('selected');
+        const oldCheck = b.querySelector('.bg-selected-checkmark');
+        if (oldCheck) oldCheck.remove();
+      });
       btn.classList.add('selected');
+      if (!btn.querySelector('.bg-selected-checkmark')) {
+        const checkmark = document.createElement('span');
+        checkmark.className = 'bg-selected-checkmark';
+        checkmark.setAttribute('aria-hidden', 'true');
+        checkmark.innerHTML = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#cf0022" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        btn.appendChild(checkmark);
+      }
       const bg = btn.dataset.blood;
       store.set({ searchFilters: { ...store.state.searchFilters, blood_group: bg } });
       refreshAllData();

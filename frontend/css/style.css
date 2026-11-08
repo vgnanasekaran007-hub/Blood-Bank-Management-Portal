@@ -668,13 +668,13 @@ p {
   color: var(--btn-primary);
 }
 
-/* Hero Right: "Find Blood Group" Card */
+/* Hero Right: "Find Blood Group" Card (Exact match of Reference Image 4) */
 .find-blood-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: var(--shadow-card);
+  background: radial-gradient(circle at top right, rgba(255, 26, 60, 0.14) 0%, rgba(14, 10, 15, 0.95) 55%, rgba(10, 6, 12, 0.98) 100%);
+  border: 1.5px solid rgba(255, 30, 60, 0.45);
+  border-radius: 22px;
+  padding: 1.85rem 1.75rem;
+  box-shadow: 0 0 32px rgba(255, 26, 60, 0.22), inset 0 0 18px rgba(255, 26, 60, 0.05);
   position: relative;
   overflow: hidden;
 }
@@ -684,75 +684,198 @@ p {
   position: absolute;
   top: 0;
   right: 0;
-  width: 150px;
-  height: 150px;
-  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(255, 26, 60, 0.2) 0%, transparent 70%);
   pointer-events: none;
 }
 
-.card-title-row {
+.find-blood-header-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
+  gap: 14px;
+  margin-bottom: 1.35rem;
 }
 
-.card-icon-badge {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 10px;
-  background: var(--accent-soft);
-  border: 1px solid var(--border-color);
-  color: var(--btn-primary);
+.find-blood-logo-badge {
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.find-blood-card h3 {
-  font-size: 1.25rem;
-  color: var(--text-heading);
+.find-blood-logo-img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(255, 30, 60, 0.45));
 }
 
-.find-blood-card p {
+.find-blood-header-divider {
+  width: 1px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.16);
+  flex-shrink: 0;
+}
+
+.find-blood-header-text {
+  flex: 1;
+}
+
+.find-blood-heading {
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 3px 0;
+  letter-spacing: -0.2px;
+}
+
+.find-blood-subheading {
   font-size: 0.8125rem;
-  color: var(--text-muted);
-  margin-bottom: 1.5rem;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+}
+
+.blood-selector-header-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.65rem;
+  letter-spacing: -0.1px;
 }
 
 .blood-selector-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
-  margin-bottom: 1.25rem;
+  gap: 0.6rem;
+  margin-bottom: 1.35rem;
 }
 
 .blood-radio-btn {
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 0.7rem 0.25rem;
-  text-align: center;
+  position: relative;
+  background: rgba(18, 12, 16, 0.75);
+  border: 1.5px solid rgba(255, 30, 60, 0.35);
+  border-radius: 12px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 700;
-  font-size: 1.15rem;
-  color: var(--text-heading);
-  background: var(--bg-secondary);
+  font-size: 1.05rem;
+  color: #ffffff;
   cursor: pointer;
-  transition: all 160ms ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
 }
 
 .blood-radio-btn:hover {
-  border-color: var(--accent-secondary);
-  background: var(--accent-soft);
-  color: var(--btn-primary);
+  border-color: rgba(255, 50, 80, 0.8);
+  background: rgba(30, 16, 24, 0.85);
+  box-shadow: 0 0 12px rgba(255, 26, 60, 0.35);
 }
 
 .blood-radio-btn.selected {
-  background: var(--btn-primary);
-  border-color: var(--btn-primary);
-  color: #fff;
-  box-shadow: 0 0 16px var(--accent-glow);
+  background: linear-gradient(135deg, #ff1a3c, #cf0022);
+  border-color: rgba(255, 100, 120, 0.9);
+  color: #ffffff;
+  box-shadow: 0 0 22px rgba(255, 26, 60, 0.65);
+}
+
+.bg-selected-checkmark {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.district-filter-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.district-filter-header-pin {
+  filter: drop-shadow(0 0 4px #ff1a3c);
+  flex-shrink: 0;
+}
+
+.district-filter-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.district-pin-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 6px #ff1a3c);
+  flex-shrink: 0;
+}
+
+.district-skyline-bg {
+  position: absolute;
+  right: 44px;
+  bottom: 0;
+  height: 38px;
+  width: 170px;
+  pointer-events: none;
+  opacity: 0.75;
+  overflow: hidden;
+}
+
+.district-skyline-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.hero-search-availability-btn {
+  width: 100%;
+  height: 50px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #ff1a3c 0%, #d40022 100%);
+  border: 1px solid rgba(255, 100, 120, 0.8);
+  color: #ffffff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 0 28px rgba(255, 26, 60, 0.65);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 1.15rem;
+}
+
+.hero-search-availability-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 38px rgba(255, 26, 60, 0.9);
+  background: linear-gradient(90deg, #ff2a4b 0%, #e60027 100%);
+}
+
+.search-btn-double-chevron {
+  font-weight: 800;
+  letter-spacing: -2px;
+  font-size: 1.15rem;
+  color: #ffffff;
 }
 
 /* Stats Highlight Strip (Matching Image 5) */
@@ -3344,5 +3467,303 @@ p {
 
   .hero-card {
     padding: 2.5rem;
+  }
+}
+
+/* ==========================================================================
+   7. CUSTOM GLOWING CRIMSON POPUP MODAL (EXACT CLONE OF REFERENCE IMAGE 2)
+   Replaces all browser confirm(), prompt(), and alert() dialogs with
+   a custom, accessible, glowing crimson frosted modal with blood infusion bag
+   and heartbeat ECG pulse line.
+   ========================================================================== */
+.popup-modal-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  background: rgba(6, 3, 6, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.popup-modal-backdrop.open {
+  display: flex !important;
+}
+
+.popup-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 580px;
+  background: linear-gradient(135deg, rgba(20, 8, 14, 0.96) 0%, rgba(12, 6, 11, 0.98) 100%);
+  border: 1.5px solid rgba(255, 30, 60, 0.7);
+  border-radius: 22px;
+  box-shadow: 0 0 45px rgba(255, 26, 60, 0.45), inset 0 0 25px rgba(255, 26, 60, 0.08);
+  padding: 26px 30px;
+  color: #f8fafc;
+  animation: popupModalScaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes popupModalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.popup-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.popup-title-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.popup-logo-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 26, 60, 0.12);
+  border: 1.5px solid rgba(255, 30, 60, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px rgba(255, 26, 60, 0.25);
+  flex-shrink: 0;
+}
+
+.popup-logo-img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(255, 30, 60, 0.5));
+}
+
+.popup-title {
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.popup-title-red {
+  color: #ff1a3c;
+}
+
+.popup-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #cbd5e1;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+  padding: 0;
+}
+
+.popup-close-btn:hover {
+  background: rgba(255, 26, 60, 0.2);
+  border-color: #ff1a3c;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(255, 26, 60, 0.5);
+}
+
+.popup-content-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.popup-body-text-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.popup-message {
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: #e2e8f0;
+  word-break: break-word;
+}
+
+.popup-message strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.popup-blood-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 14px;
+  border-radius: 9999px;
+  border: 1.5px solid #ff1a3c;
+  background: rgba(255, 26, 60, 0.16);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  box-shadow: 0 0 12px rgba(255, 26, 60, 0.35);
+  margin: 0 4px;
+  vertical-align: middle;
+}
+
+.popup-input-container {
+  margin-top: 14px;
+  width: 100%;
+}
+
+.popup-text-input {
+  width: 100%;
+  background: rgba(14, 8, 14, 0.85);
+  border: 1.5px solid rgba(255, 30, 60, 0.45);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.popup-text-input:focus {
+  border-color: #ff1a3c;
+  box-shadow: 0 0 16px rgba(255, 26, 60, 0.45);
+  background: rgba(20, 10, 18, 0.95);
+}
+
+.popup-blood-bag-wrap {
+  flex-shrink: 0;
+  width: 72px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.popup-blood-bag-svg {
+  width: 68px;
+  height: 98px;
+  filter: drop-shadow(0 0 12px rgba(255, 26, 60, 0.35));
+}
+
+.popup-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 30, 60, 0.18);
+}
+
+.popup-ecg-wrap {
+  flex: 1;
+  max-width: 160px;
+}
+
+.popup-ecg-svg {
+  width: 100%;
+  height: 36px;
+  filter: drop-shadow(0 0 6px #ff1a3c);
+}
+
+.popup-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.popup-btn-cancel {
+  padding: 9px 22px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s ease;
+}
+
+.popup-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+
+.popup-btn-ok {
+  padding: 9px 28px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #ff1a3c, #cf0022);
+  border: 1px solid rgba(255, 100, 120, 0.85);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 0 22px rgba(255, 26, 60, 0.65);
+  transition: all 0.2s ease;
+}
+
+.popup-btn-ok:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 32px rgba(255, 26, 60, 0.85);
+}
+
+@media (max-width: 576px) {
+  .popup-modal-card {
+    padding: 20px 18px;
+    border-radius: 18px;
+  }
+  .popup-title {
+    font-size: 1.2rem;
+  }
+  .popup-blood-bag-wrap {
+    width: 52px;
+  }
+  .popup-blood-bag-svg {
+    width: 50px;
+    height: 72px;
+  }
+  .popup-ecg-wrap {
+    display: none;
+  }
+  .popup-bottom-row {
+    justify-content: flex-end;
+  }
+  .popup-btn-cancel, .popup-btn-ok {
+    padding: 8px 18px;
+    font-size: 0.88rem;
   }
 }
