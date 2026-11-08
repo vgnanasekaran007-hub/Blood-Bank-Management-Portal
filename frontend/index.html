@@ -566,17 +566,30 @@
          ======================================================== -->
     <section id="module-search" class="app-module-section active">
       <div class="container">
-        <div class="section-head">
-          <div class="section-head-title">
-            <h2>Find Donors & Available Blood</h2>
-            <p>Verified voluntary donors matching clinical criteria. Contact information protected under privacy
-              guidelines.</p>
+        <!-- Section Header (Exact Clone of User Reference Image 1) -->
+        <div class="donors-discovery-header">
+          <div class="donors-discovery-title-group">
+            <div class="donors-discovery-icon-badge" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff1a3c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div class="donors-discovery-headings">
+              <h2 class="donors-discovery-title">Find <span class="highlight-red">Donors &amp; Available Blood</span></h2>
+              <p class="donors-discovery-sub">Verified voluntary donors matching clinical criteria. Contact information protected under privacy guidelines.</p>
+            </div>
           </div>
-          <div>
-            <span style="font-size: 0.875rem; color: var(--text-muted);">
-              Matching Donors: <strong id="search-results-count" class="tabular-nums"
-                style="color: var(--text-heading);">0</strong>
-            </span>
+          <div class="donors-matching-pill">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff1a3c" stroke-width="2.2" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span>Matching Donors: <strong id="search-results-count" class="tabular-nums">0</strong></span>
           </div>
         </div>
 

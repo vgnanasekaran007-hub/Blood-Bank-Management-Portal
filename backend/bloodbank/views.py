@@ -135,24 +135,29 @@ class LoginView(views.APIView):
         if not username or not password:
             return Response({"error": "Both username and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = authenticate(request, username=username, password=password)
-        if user is None:
-            raw_input = (username or '').strip()
-            # 1. Match by email (e.g. gnanasekaranvel07@gmail.com)
-            user_obj = User.objects.filter(email__iexact=raw_input).first()
-            # 2. Match by full name with space (e.g. "Gnanasekaran Velayutham")
-            if not user_obj and ' ' in raw_input:
-                parts = raw_input.split(None, 1)
-                user_obj = User.objects.filter(first_name__iexact=parts[0], last_name__iexact=parts[1]).first()
-            # 3. Match by normalized username (e.g. "Gnanasekaran_Velayutham")
+        raw_input = str(username).strip()
+        auth_username = raw_input
+
+        # Fast user resolution before authenticate to avoid double PBKDF2 hashing latency
+        if '@' in raw_input:
+            user_obj = User.objects.filter(email__iexact=raw_input).only('id', 'username').first()
+            if user_obj:
+                auth_username = user_obj.username
+        elif ' ' in raw_input:
+            parts = raw_input.split(None, 1)
+            user_obj = User.objects.filter(first_name__iexact=parts[0], last_name__iexact=parts[1]).only('id', 'username').first()
             if not user_obj:
                 norm = raw_input.replace(' ', '_')
-                user_obj = User.objects.filter(username__iexact=norm).first()
-            if not user_obj:
-                user_obj = User.objects.filter(username__iexact=raw_input).first()
-
+                user_obj = User.objects.filter(username__iexact=norm).only('id', 'username').first()
             if user_obj:
-                user = authenticate(request, username=user_obj.username, password=password)
+                auth_username = user_obj.username
+        else:
+            user_obj = User.objects.filter(username__iexact=raw_input).only('id', 'username').first()
+            if user_obj:
+                auth_username = user_obj.username
+
+        # Single fast authenticate invocation
+        user = authenticate(request, username=auth_username, password=password)
 
         if user is not None:
             if not user.is_active:

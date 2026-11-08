@@ -149,31 +149,61 @@ function renderSearchResults(state) {
     <div class="donor-card">
       <div class="donor-card-top">
         <div class="donor-blood-badge">${donor.blood_group}</div>
-        <div class="donor-meta" style="text-align: right;">
-          <h4>${donor.display_name}</h4>
+        <div class="donor-meta-info">
+          <h4 class="donor-name">${donor.display_name}</h4>
           <span class="donor-code">${donor.donor_code}</span>
         </div>
+        <div class="donor-avatar-silhouette" aria-hidden="true">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 12c-5.33 0-8 2.67-8 6v2h16v-2c0-3.33-2.67-6-8-6z"/>
+          </svg>
+        </div>
       </div>
+
       <div class="donor-details-list">
         <div class="donor-detail-item">
-          <span>&#128205;</span> <span>${donor.district}, ${donor.city || donor.state}</span>
+          <svg class="detail-icon icon-pin" width="16" height="16" viewBox="0 0 24 24" fill="#ff1a3c" stroke="none">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+          </svg>
+          <span class="detail-text">${donor.district}, ${donor.city || donor.state || 'Tamil Nadu'}</span>
         </div>
         <div class="donor-detail-item">
-          <span>&#128154;</span> <span>${donor.total_donations} Previous Donation(s)</span>
+          <svg class="detail-icon icon-check" width="16" height="16" viewBox="0 0 24 24" fill="#10b981" stroke="none">
+            <circle cx="12" cy="12" r="10" fill="#10b981"/>
+            <path d="m9 12 2 2 4-4" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span class="detail-text">${donor.total_donations} Previous Donation(s)</span>
         </div>
         <div class="donor-detail-item">
-          <span>&#128337;</span> <span>${donor.is_eligible ? 'Eligible to Donate' : 'Waiting Safe Interval'}</span>
+          <svg class="detail-icon icon-drop" width="16" height="16" viewBox="0 0 24 24" fill="#ffffff" stroke="none">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+          </svg>
+          <span class="detail-text">${donor.is_eligible ? 'Eligible to Donate' : 'Waiting Safe Interval'}</span>
         </div>
       </div>
+
       <div class="donor-privacy-note">
-        &#128274; <em>Contact protected by privacy policy. Contact via verified blood request.</em>
+        <svg class="privacy-lock-icon" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="none">
+          <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+        </svg>
+        <span>Contact protected by privacy policy. Details via verified blood request.</span>
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="window.openRequestModal('${donor.blood_group}', '${donor.district}')">
-        Request ${donor.blood_group} via Portal
+
+      <button type="button" class="donor-card-request-btn" onclick="window.openRequestModal('${donor.blood_group}', '${donor.district}')" title="Request ${donor.blood_group} via Portal">
+        <svg class="request-plane-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+        <span>Request ${donor.blood_group} via Portal</span>
+        <svg class="request-arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
       </button>
     </div>
   `).join('');
 }
+window.renderSearchResults = renderSearchResults;
 
 // 3. Donor Portal (Profile, Availability Switch, 90-day safe interval)
 function renderDonorPortal(state) {
@@ -618,7 +648,12 @@ export async function refreshAllData(options = {}) {
   }
 
   try {
-    const invRes = await api.inventory.get();
+    // Parallel high-performance data retrieval
+    const [invRes, searchRes] = await Promise.all([
+      api.inventory.get().catch(err => null),
+      api.search.donors(blood_group, district, city).catch(err => null)
+    ]);
+
     if (invRes && invRes.inventory && invRes.inventory.length) {
       store.set({
         inventory: invRes.inventory,
@@ -630,7 +665,6 @@ export async function refreshAllData(options = {}) {
       renderTickerAndInventory(store.state);
     }
 
-    const searchRes = await api.search.donors(blood_group, district, city);
     if (searchRes && Array.isArray(searchRes.donors) && searchRes.donors.length > 0) {
       store.set({
         searchResults: searchRes.donors,
@@ -1603,23 +1637,36 @@ async function initLifePulseApp() {
   }
   initCustomDistrictDropdown();
 
-  // Account login form
+  // Account login form (High-performance instant sign-in)
   const loginForm = document.getElementById('account-login-form');
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const submitBtn = loginForm.querySelector('button[type="submit"]') || loginForm.querySelector('.auth-primary-submit');
+      const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+      
       const formData = new FormData(loginForm);
       const username = formData.get('username');
       const password = formData.get('password');
 
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+          <span class="auth-btn-spinner" aria-hidden="true"></span>
+          <span>Signing In...</span>
+        `;
+      }
+
       try {
         const res = await api.auth.login(username, password);
+
+        // 1. Instant UI update & modal dismissal
         showToast(`Welcome back, ${res.user.first_name || res.user.username}!`, 'success');
         window.closeModal('login-modal');
         loginForm.reset();
 
+        // 2. Immediately store credentials & switch views with 0ms delay
         store.setUser(res.user, res.donor_profile || null);
-        await refreshAllData();
         updateUIForAuth();
 
         if (store.state.role === 'admin' || (store.isAdmin && store.isAdmin())) {
@@ -1627,8 +1674,16 @@ async function initLifePulseApp() {
         } else if (store.state.role === 'donor' || (store.isDonor && store.isDonor())) {
           window.switchModule('donor_portal');
         }
+
+        // 3. Fast asynchronous background data synchronization (non-blocking)
+        refreshAllData().catch(err => console.warn('Background data sync:', err));
       } catch (err) {
         showToast(err.message, 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        }
       }
     });
   }
@@ -1784,16 +1839,27 @@ async function initLifePulseApp() {
       e.preventDefault();
       const username = document.getElementById('cs-login-username').value;
       const password = document.getElementById('cs-login-password').value;
+      const submitBtn = csLoginForm.querySelector('button[type="submit"]');
+      const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="auth-btn-spinner"></span> Signing In...';
+      }
       try {
-        await api.auth.login(username, password);
-        const authCheck = await api.auth.me();
-        store.setUser(authCheck.user, authCheck.donor_profile);
-        showToast(`Welcome! Loaded details for ${authCheck.user.first_name || authCheck.user.username}`, 'success');
-        await refreshAllData();
+        const loginData = await api.auth.login(username, password);
+        store.setUser(loginData.user, loginData.donor_profile);
+        showToast(`Welcome! Loaded details for ${loginData.user.first_name || loginData.user.username}`, 'success');
         updateUIForAuth();
         populateChecksheetEdit();
+        // Non-blocking background sync
+        refreshAllData().catch(console.error);
       } catch (err) {
         showToast(`Sign in failed: ${err.message}`, 'error');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnHtml;
+        }
       }
     });
   }

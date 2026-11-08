@@ -1217,85 +1217,248 @@ p {
   100% { border-color: var(--status-critical-border); }
 }
 
-/* Donor Cards & Search Results */
+/* ========================================================
+   FIND DONORS & BLOOD DISCOVERY (Exact Clone of Reference Image 1)
+   ======================================================== */
+.donors-discovery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.donors-discovery-title-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.donors-discovery-icon-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 26, 60, 0.12);
+  border: 1.5px solid rgba(255, 30, 60, 0.45);
+  box-shadow: 0 0 16px rgba(255, 26, 60, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.donors-discovery-headings {
+  flex: 1;
+}
+
+.donors-discovery-title {
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.3px;
+}
+
+.donors-discovery-title .highlight-red {
+  color: #ff1a3c;
+}
+
+.donors-discovery-sub {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.5;
+  max-width: 640px;
+}
+
+.donors-matching-pill {
+  border-radius: 9999px;
+  background: rgba(22, 10, 16, 0.9);
+  border: 1.5px solid rgba(255, 30, 60, 0.45);
+  box-shadow: 0 0 16px rgba(255, 26, 60, 0.2);
+  padding: 8px 18px;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.donors-matching-pill strong {
+  color: #ff1a3c;
+  font-weight: 800;
+}
+
+/* Donor Cards & Search Results (Matching Reference Image 1) */
 .donor-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1.4rem;
 }
 
 .donor-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  padding: 1.25rem;
-  box-shadow: var(--shadow-card);
+  background: linear-gradient(145deg, rgba(20, 10, 16, 0.95), rgba(12, 6, 11, 0.98));
+  border: 1.5px solid rgba(255, 30, 60, 0.3);
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  transition: all 160ms ease;
+}
+
+.donor-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(255, 26, 60, 0.12) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .donor-card:hover {
-  border-color: var(--btn-primary);
-  box-shadow: var(--shadow-glow);
+  transform: translateY(-3px);
+  border-color: #ff1a3c;
+  box-shadow: 0 0 30px rgba(255, 26, 60, 0.45), inset 0 0 15px rgba(255, 26, 60, 0.08);
 }
 
 .donor-card-top {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 1rem;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  position: relative;
 }
 
 .donor-blood-badge {
-  width: 2.75rem;
-  height: 2.75rem;
-  background: var(--accent-soft);
-  color: var(--btn-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 26, 60, 0.12);
+  border: 1.5px solid rgba(255, 30, 60, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 800;
   font-size: 1.25rem;
+  color: #ff1a3c;
+  box-shadow: 0 0 12px rgba(255, 26, 60, 0.2);
+  flex-shrink: 0;
+}
+
+.donor-meta-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.donor-name {
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.donor-code {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  font-weight: 500;
+  font-family: 'Plus Jakarta Sans', monospace;
+}
+
+.donor-avatar-silhouette {
+  flex-shrink: 0;
+  color: rgba(255, 26, 60, 0.28);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.donor-meta h4 {
-  font-size: 1.05rem;
-  color: var(--text-heading);
-  margin-bottom: 0.15rem;
-}
-
-.donor-code {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
 .donor-details-list {
-  font-size: 0.8125rem;
-  color: var(--text-body);
-  margin-bottom: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .donor-detail-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #f1f5f9;
+  font-weight: 500;
+}
+
+.donor-detail-item .detail-icon {
+  flex-shrink: 0;
+}
+
+.donor-detail-item .detail-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .donor-privacy-note {
-  font-size: 0.6875rem;
-  color: var(--text-muted);
-  border-top: 1px dashed var(--border-color);
-  padding-top: 0.6rem;
-  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-top: 14px;
+  margin-bottom: 18px;
+  border-top: 1px solid rgba(255, 30, 60, 0.16);
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+.donor-privacy-note .privacy-lock-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.donor-card-request-btn {
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(24, 12, 18, 0.85);
+  border: 1.5px solid rgba(255, 30, 60, 0.4);
+  color: #ffffff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: auto;
+}
+
+.donor-card-request-btn:hover,
+.donor-card:hover .donor-card-request-btn {
+  background: linear-gradient(135deg, #ff1a3c, #cf0022);
+  border-color: rgba(255, 100, 120, 0.9);
+  box-shadow: 0 0 24px rgba(255, 26, 60, 0.7);
+  color: #ffffff;
+}
+
+.request-plane-icon,
+.request-arrow-icon {
+  flex-shrink: 0;
 }
 
 /* Tables (Requests, Donations, Transactions) */
@@ -2247,116 +2410,171 @@ p {
 }
 
 /* ========================================================
-   PORTAL DEVELOPER SPOTLIGHT SECTION (Exact Match to User Screenshot)
+   PORTAL DEVELOPER SPOTLIGHT SECTION (Exact Clone of Reference Image 2)
+   Features exclusive Premium Neon Hover Effect with laser aura
+   and specular glow gleams.
    ======================================================== */
 .portal-developer-card {
-  background: radial-gradient(circle at top left, rgba(45, 12, 20, 0.45) 0%, rgba(13, 11, 15, 0.98) 60%), #0d0b0f;
-  border: 1px solid rgba(255, 38, 63, 0.38);
-  border-top: 1.5px solid rgba(255, 60, 85, 0.75);
-  border-left: 3.5px solid #ff263f;
-  border-radius: 14px;
-  padding: 1.25rem 1.65rem;
+  position: relative;
+  background: radial-gradient(ellipse 65% 75% at 75% 50%, rgba(255, 26, 60, 0.1) 0%, rgba(18, 10, 16, 0.96) 50%, rgba(10, 6, 11, 0.98) 100%);
+  border: 1.5px solid rgba(255, 30, 60, 0.62);
+  border-radius: 20px;
+  padding: 1.35rem 1.85rem;
   margin: 2.25rem 0 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1.25rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65), 0 0 24px rgba(255, 38, 63, 0.16), inset 0 0 15px rgba(255, 38, 63, 0.04);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65), 0 0 26px rgba(255, 26, 60, 0.22), inset 0 0 16px rgba(255, 26, 60, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
 }
 
+/* Flowing red silk ribbon wave in center-right (matching Image 2) */
+.portal-developer-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse 60% 80% at 70% 50%, rgba(255, 26, 60, 0.14), transparent 70%);
+  pointer-events: none;
+}
+
+/* Specular laser gleams on top and bottom borders (matching Image 2) */
+.portal-developer-card::after {
+  content: '';
+  position: absolute;
+  top: -1.5px;
+  left: 28%;
+  width: 95px;
+  height: 2.5px;
+  background: linear-gradient(90deg, transparent, #ffffff, #ff2642, transparent);
+  box-shadow: 0 0 12px #ff2642;
+  border-radius: 2px;
+  pointer-events: none;
+  transition: all 0.4s ease;
+}
+
+/* Exclusive Premium Neon Hover Effect (ONLY for Developer Section) */
 .portal-developer-card:hover {
-  border-color: rgba(255, 65, 90, 0.65);
-  border-top-color: rgba(255, 90, 115, 0.95);
-  border-left-color: #ff263f;
-  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.75), 0 0 30px rgba(255, 38, 63, 0.26);
+  transform: translateY(-2px);
+  border-color: #ff1a3c;
+  box-shadow: 0 0 45px rgba(255, 26, 60, 0.7), 0 0 95px rgba(255, 26, 60, 0.35), inset 0 0 25px rgba(255, 26, 60, 0.15);
+}
+
+.portal-developer-card:hover::after {
+  left: 48%;
+  width: 150px;
+  box-shadow: 0 0 20px #ff1a3c, 0 0 30px #ffffff;
 }
 
 .dev-profile-group {
   display: flex;
   align-items: center;
-  gap: 1.15rem;
+  gap: 1.25rem;
+  position: relative;
+  z-index: 1;
 }
 
 .dev-avatar-box {
   width: 52px;
   height: 52px;
-  border-radius: 12px;
-  background: #23080f;
-  border: 1px solid rgba(255, 38, 63, 0.36);
+  border-radius: 14px;
+  background: rgba(35, 10, 18, 0.9);
+  border: 1.5px solid rgba(255, 30, 60, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ff263f;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 800;
   font-size: 1.25rem;
-  letter-spacing: -0.02em;
+  color: #ff1a3c;
+  box-shadow: 0 0 16px rgba(255, 26, 60, 0.25);
   flex-shrink: 0;
-  box-shadow: inset 0 0 14px rgba(255, 38, 63, 0.2), 0 2px 10px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.portal-developer-card:hover .dev-avatar-box {
+  border-color: #ff1a3c;
+  box-shadow: 0 0 26px rgba(255, 26, 60, 0.8);
+  transform: scale(1.04);
 }
 
 .dev-info-col {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .dev-role-kicker {
-  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #94a3b8;
+  display: flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #8c8896;
 }
 
 .dev-role-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #ff263f;
+  background: #ff1a3c;
+  box-shadow: 0 0 8px #ff1a3c;
   display: inline-block;
-  box-shadow: 0 0 8px #ff263f;
+  animation: devDotPulse 2s infinite ease-in-out;
+}
+
+@keyframes devDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
 }
 
 .dev-name-heading {
-  margin: 0;
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
   font-size: 1.35rem;
   font-weight: 700;
   color: #ffffff;
-  letter-spacing: -0.015em;
-  line-height: 1.2;
+  margin: 0;
+  letter-spacing: -0.2px;
 }
 
 .dev-meta-desc {
-  font-size: 0.8125rem;
-  color: #7a7686;
-  line-height: 1.4;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 .dev-actions-group {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  position: relative;
+  z-index: 1;
 }
 
 .dev-github-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.85rem;
-  background: rgba(18, 14, 20, 0.88);
-  border: 1px solid rgba(255, 38, 63, 0.28);
+  gap: 12px;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  background: rgba(18, 12, 16, 0.85);
+  border: 1.5px solid rgba(255, 30, 60, 0.4);
   color: #ffffff;
-  padding: 0.65rem 1.15rem;
-  border-radius: 10px;
   text-decoration: none;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.portal-developer-card:hover .dev-github-btn,
+.dev-github-btn:hover {
+  background: rgba(35, 12, 20, 0.95);
+  border-color: #ff1a3c;
+  box-shadow: 0 0 22px rgba(255, 26, 60, 0.5);
+  transform: translateY(-1px);
 }
 
 .dev-github-btn .gh-icon {
@@ -2365,50 +2583,57 @@ p {
   transition: transform 0.2s ease;
 }
 
+.dev-github-btn:hover .gh-icon {
+  transform: scale(1.08);
+}
+
 .dev-github-btn .gh-text-box {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  text-align: left;
   line-height: 1.2;
 }
 
 .dev-github-btn .gh-label {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: #8c8896;
+  font-size: 0.68rem;
   font-weight: 600;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  text-transform: uppercase;
 }
 
 .dev-github-btn .gh-handle {
-  font-size: 0.8125rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #ffffff;
-  font-family: inherit;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.3px;
 }
 
 .dev-github-btn .gh-arrow {
-  color: #7a7686;
-  margin-left: 0.25rem;
-  transition: transform 0.2s ease, color 0.2s ease;
-}
-
-.dev-github-btn:hover {
-  border-color: rgba(255, 38, 63, 0.65);
-  background: rgba(32, 16, 24, 0.95);
   color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 18px rgba(255, 38, 63, 0.25);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
 .dev-github-btn:hover .gh-arrow {
   transform: translate(2px, -2px);
-  color: #ff263f;
 }
 
-.dev-github-btn:hover .gh-icon {
-  transform: scale(1.08);
+/* Spinner for fast sign in button feedback */
+.auth-btn-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: authBtnSpin 0.7s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+@keyframes authBtnSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* ========================================================
