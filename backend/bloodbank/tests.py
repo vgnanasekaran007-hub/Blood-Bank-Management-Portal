@@ -43,6 +43,24 @@ class BloodPortalModuleTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.json()['status'], 'healthy')
 
+    def test_uptimerobot_health_check(self):
+        # Verify /health/ returns HTTP 200 with the exact required JSON payload
+        res = self.client.get('/health/')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json(), {
+            "status": "ok",
+            "message": "Blood Bank Backend is running"
+        })
+
+    def test_uptimerobot_health_check_no_trailing_slash(self):
+        # Verify /health without trailing slash also succeeds
+        res = self.client.get('/health')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json(), {
+            "status": "ok",
+            "message": "Blood Bank Backend is running"
+        })
+
     def test_module_1_donor_registration_and_profile(self):
         # Test public registration of a donor
         res = self.client.post('/api/auth/register/', {

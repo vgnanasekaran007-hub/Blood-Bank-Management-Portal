@@ -14,7 +14,8 @@ def api_root_index(request):
         "version": "1.0.0",
         "documentation": "/api/health/",
         "endpoints": {
-            "health": "/api/health/",
+            "health": "/health/",
+            "api_health": "/api/health/",
             "auth_register": "/api/auth/register/",
             "auth_login": "/api/auth/login/",
             "auth_me": "/api/auth/me/",
@@ -27,8 +28,20 @@ def api_root_index(request):
         }
     })
 
+def health_check(request):
+    """
+    Lightweight public health-check endpoint for monitoring services (e.g. UptimeRobot, Render).
+    Returns HTTP 200 without connecting to or querying Supabase/database to ensure zero overhead.
+    """
+    return JsonResponse({
+        "status": "ok",
+        "message": "Blood Bank Backend is running"
+    }, status=200)
+
 urlpatterns = [
     path('', api_root_index, name='api-root-index'),
+    path('health/', health_check, name='health-check'),
+    path('health', health_check, name='health-check-noslash'),
     path('admin/', admin.site.urls),
     path('api/', include('bloodbank.urls')),
 ]

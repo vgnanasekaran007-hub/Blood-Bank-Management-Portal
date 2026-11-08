@@ -7,7 +7,7 @@ services:
     rootDir: backend
     buildCommand: "pip install -r requirements.txt && python manage.py migrate && python seed_data.py"
     startCommand: "gunicorn bloodportal.wsgi:application --bind 0.0.0.0:$PORT"
-    healthCheckPath: /api/health/
+    healthCheckPath: /health/
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
