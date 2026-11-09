@@ -40,7 +40,7 @@
         </svg>
         <span><strong>Network Issue / Offline:</strong> Unable to reach LifePulse database. Showing last verified cache.</span>
       </div>
-      <button id="offline-retry-btn" class="btn-offline-retry" onclick="window.retryNetworkConnection()">
+      <button type="button" id="offline-retry-btn" class="btn-offline-retry" onclick="window.retryNetworkConnection()">
         <svg id="retry-spinner-icon" class="spin-on-retry" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
         </svg>
@@ -131,7 +131,7 @@
       <div class="header-actions">
         <!-- Account / Role Menu -->
         <div class="role-dropdown-wrap">
-          <button id="role-menu-trigger" class="role-select-btn" aria-expanded="false" aria-haspopup="true">
+          <button type="button" id="role-menu-trigger" class="role-select-btn" aria-expanded="false" aria-haspopup="true">
             <span id="user-session-display">Public View</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="m6 9 6 6 6-6" />
@@ -141,22 +141,22 @@
             <div
               style="font-size: 0.72rem; color: var(--text-muted); padding: 0.35rem 0.75rem; text-transform: uppercase; font-weight: 700;">
               Account & Role:</div>
-            <button class="role-menu-item active" data-role="guest" onclick="switchRole('guest')">
+            <button type="button" class="role-menu-item active" data-role="guest" onclick="switchRole('guest')">
               <span>&#128100;</span> Public View
             </button>
-            <button class="role-menu-item" data-role="admin" onclick="switchRole('admin')">
+            <button type="button" class="role-menu-item" data-role="admin" onclick="switchRole('admin')">
               <span>&#9877;&#65039;</span> Staff Administrator
             </button>
-            <button class="role-menu-item" onclick="openLoginModal()">
+            <button type="button" id="menu-signin-btn" class="role-menu-item" onclick="openLoginModal()">
               <span>&#128273;</span> Account Sign In
             </button>
-            <button class="role-menu-item" onclick="switchModule('checksheet')">
+            <button type="button" class="role-menu-item" onclick="switchModule('checksheet')">
               <span>&#128221;</span> Donor Checksheet
             </button>
-            <button class="role-menu-item" onclick="openRegisterDonorModal()">
+            <button type="button" class="role-menu-item" onclick="openRegisterDonorModal()">
               <span>&#128154;</span> Register New Donor
             </button>
-            <button id="menu-signout-btn" class="role-menu-item" style="display: none; color: var(--btn-primary);"
+            <button type="button" id="menu-signout-btn" class="role-menu-item" style="display: none; color: var(--btn-primary);"
               onclick="switchRole('guest')">
               <span>&#10006;</span> Sign Out
             </button>
@@ -164,12 +164,12 @@
         </div>
 
         <!-- Request Blood CTA Button -->
-        <button class="btn btn-primary btn-sm desktop-request-cta" onclick="openRequestModal('O+', 'Chennai')">
+        <button type="button" class="btn btn-primary btn-sm desktop-request-cta" onclick="openRequestModal('O+', 'Chennai')">
           + Request Blood
         </button>
 
         <!-- Dark / Light Theme Toggle (Blood Icon, Placed Right After Request Blood) -->
-        <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Bright / Dark Mode"
+        <button type="button" id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Bright / Dark Mode"
           title="Toggle Theme">
           <svg class="theme-blood-drop-icon" width="20" height="20" viewBox="0 0 32 32" aria-hidden="true">
             <defs>
@@ -276,13 +276,21 @@
         </li>
       </ul>
       <div class="mobile-drawer-cta">
-        <button class="btn btn-primary" style="width: 100%; min-height: 44px;"
+        <button type="button" class="btn btn-primary" style="width: 100%; min-height: 44px;"
           onclick="window.openRequestModal('O+', 'Chennai'); window.closeMobileMenu();">
           + Submit Emergency Request
         </button>
-        <button class="btn btn-secondary" style="width: 100%; margin-top: 0.6rem; min-height: 44px;"
+        <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 0.6rem; min-height: 44px;"
           onclick="window.openRegisterDonorModal(); window.closeMobileMenu();">
           &#128154; Register as Donor
+        </button>
+        <button type="button" id="mobile-drawer-login-btn" class="btn btn-secondary" style="width: 100%; margin-top: 0.6rem; min-height: 44px;"
+          onclick="window.openLoginModal(); window.closeMobileMenu();">
+          &#128273; Sign In / Staff Account
+        </button>
+        <button type="button" id="mobile-drawer-signout-btn" class="btn btn-danger" style="width: 100%; margin-top: 0.6rem; min-height: 44px; display: none;"
+          onclick="window.switchRole('guest'); window.closeMobileMenu();">
+          &#10006; Sign Out (Public View)
         </button>
       </div>
     </div>
@@ -674,7 +682,7 @@
                   <div class="form-group">
                     <label for="cs-phone" class="form-label">Primary Mobile Phone (10 digits) *</label>
                     <input type="tel" id="cs-phone" name="phone_number" class="form-control" required
-                      pattern="[0-9]{10}" placeholder="9840123456">
+                      pattern="[0-9]{10}" maxlength="10" inputmode="numeric" title="Enter a 10-digit mobile number (digits only)" placeholder="9840123456">
                   </div>
                   <div class="form-group">
                     <label for="cs-dob" class="form-label">Date of Birth (Must be 18+) *</label>
@@ -811,6 +819,22 @@
 
             <!-- Mode 2: Update Existing Donor Details Form -->
             <div id="checksheet-update-panel" style="display: none;">
+              <div id="checksheet-non-donor-notice" class="state-box" style="display: none; padding: 2rem 1.25rem;">
+                <div class="state-icon">&#128100;</div>
+                <h3 class="state-title" style="margin-bottom: 0.5rem;">Signed In as Non-Donor Account</h3>
+                <p id="cs-non-donor-desc" class="state-desc" style="margin-bottom: 1.25rem;">
+                  This account does not have a voluntary donor profile attached yet. Use the New Donor Checksheet or register as a voluntary donor.
+                </p>
+                <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-primary" onclick="window.setChecksheetMode('new')">
+                    &#128154; Fill New Donor Checksheet
+                  </button>
+                  <button type="button" class="btn btn-secondary" onclick="window.switchRole('guest')">
+                    Sign Out &amp; Switch Account
+                  </button>
+                </div>
+              </div>
+
               <div id="checksheet-login-prompt" style="text-align: center; padding: 2rem 1rem;">
                 <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">&#128273;</div>
                 <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--text-heading);">Sign In to Update
@@ -850,7 +874,7 @@
                     <div class="form-group">
                       <label for="cs-update-phone" class="form-label">Phone Number *</label>
                       <input type="tel" id="cs-update-phone" name="phone_number" class="form-control" required
-                        pattern="[0-9]{10}">
+                        pattern="[0-9]{10}" maxlength="10" inputmode="numeric" title="Enter a 10-digit mobile number (digits only)">
                     </div>
                     <div class="form-group">
                       <label for="cs-update-alt-phone" class="form-label">Alternate Phone / WhatsApp</label>
@@ -1196,7 +1220,7 @@
     <div class="modal-dialog">
       <div class="modal-header">
         <h3 id="modal-req-title">Submit Emergency Blood Request</h3>
-        <button class="modal-close-btn" onclick="closeModal('request-modal')" aria-label="Close">&times;</button>
+        <button type="button" class="modal-close-btn" onclick="closeModal('request-modal')" aria-label="Close">&times;</button>
       </div>
       <form id="emergency-request-form">
         <div class="modal-body">
@@ -1324,7 +1348,7 @@
             <div class="form-group">
               <label for="req-contact-phone" class="form-label">Emergency Phone (10 digits) *</label>
               <input type="tel" id="req-contact-phone" name="contact_phone" class="form-control" required
-                pattern="[0-9]{10}" placeholder="9840123456">
+                pattern="[0-9]{10}" maxlength="10" inputmode="numeric" title="Enter a 10-digit mobile number (digits only)" placeholder="9840123456">
             </div>
           </div>
 
@@ -1507,7 +1531,7 @@
             </label>
             <div class="auth-input-container">
               <input type="tel" id="reg-phone" name="phone_number" class="auth-text-input" required pattern="[0-9]{10}"
-                placeholder="9840123456" autocomplete="tel">
+                maxlength="10" inputmode="numeric" title="Enter a 10-digit mobile number (digits only)" placeholder="9840123456" autocomplete="tel">
             </div>
           </div>
 
@@ -1652,7 +1676,7 @@
     <div class="modal-dialog">
       <div class="modal-header">
         <h3 id="modal-don-title">Log Blood Donation Record</h3>
-        <button class="modal-close-btn" onclick="closeModal('log-donation-modal')" aria-label="Close">&times;</button>
+        <button type="button" class="modal-close-btn" onclick="closeModal('log-donation-modal')" aria-label="Close">&times;</button>
       </div>
       <form id="log-donation-form">
         <div class="modal-body">
@@ -2095,13 +2119,33 @@
       const today = new Date().toISOString().split('T')[0];
       const reqDateInput = document.getElementById('req-required-date');
       const donDateInput = document.getElementById('don-date');
-      if (reqDateInput) reqDateInput.value = today;
-      if (donDateInput) donDateInput.value = today;
+      const csLastDon = document.getElementById('cs-last-donation');
+      const csUpdateLastDon = document.getElementById('cs-update-last-donation');
+      if (reqDateInput) { reqDateInput.min = today; reqDateInput.value = today; }
+      if (donDateInput) { donDateInput.max = today; donDateInput.value = today; }
+      if (csLastDon) csLastDon.max = today;
+      if (csUpdateLastDon) csUpdateLastDon.max = today;
 
       const eighteenYearsAgo = new Date();
       eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+      const maxDob = eighteenYearsAgo.toISOString().split('T')[0];
+
+      const sixtyFiveYearsAgo = new Date();
+      sixtyFiveYearsAgo.setFullYear(sixtyFiveYearsAgo.getFullYear() - 65);
+      const minDob = sixtyFiveYearsAgo.toISOString().split('T')[0];
+
       const dobInput = document.getElementById('reg-dob');
-      if (dobInput) dobInput.value = eighteenYearsAgo.toISOString().split('T')[0];
+      if (dobInput) {
+        dobInput.min = minDob;
+        dobInput.max = maxDob;
+        dobInput.value = maxDob;
+      }
+      const csDobInput = document.getElementById('cs-dob');
+      if (csDobInput) {
+        csDobInput.min = minDob;
+        csDobInput.max = maxDob;
+        csDobInput.value = maxDob;
+      }
     });
   </script>
 </body>

@@ -59,7 +59,7 @@ class SessionTokenAuthentication(BaseAuthentication):
             return None
 
         try:
-            user = User.objects.get(pk=user_id)
+            user = User.objects.select_related('profile', 'donor_profile').get(pk=user_id)
         except User.DoesNotExist:
             return None
 

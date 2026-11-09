@@ -299,6 +299,16 @@ p {
   font-weight: 500;
 }
 
+.btn:disabled,
+.btn[disabled],
+.auth-submit-btn:disabled,
+.donor-card-request-btn:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none !important;
+}
+
 /* Primary Nav Menu */
 .nav-menu {
   display: flex;
@@ -735,7 +745,7 @@ p {
 
 .find-blood-subheading {
   font-size: 0.8125rem;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.78);
   margin: 0;
 }
 
@@ -813,7 +823,8 @@ p {
   flex-shrink: 0;
 }
 
-.district-filter-title {
+.find-blood-card .district-filter-title,
+.find-blood-card .form-label.district-filter-title {
   font-size: 0.92rem;
   font-weight: 600;
   color: #ffffff;
@@ -1256,7 +1267,7 @@ p {
   font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
   font-size: 1.65rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-heading);
   margin: 0 0 4px 0;
   letter-spacing: -0.3px;
 }
@@ -1267,10 +1278,19 @@ p {
 
 .donors-discovery-sub {
   font-size: 0.88rem;
-  color: #94a3b8;
+  color: var(--text-muted);
   margin: 0;
   line-height: 1.5;
   max-width: 640px;
+}
+
+[data-theme="light"] .donors-matching-pill {
+  background: var(--bg-card-elevated);
+  color: var(--text-heading);
+}
+
+[data-theme="light"] .find-blood-card h3 {
+  color: #ffffff;
 }
 
 .donors-matching-pill {
@@ -2318,16 +2338,16 @@ p {
   }
 }
 
-/* Toast Container */
+/* Toast Container (Always above modals & mobile bottom nav) */
 .toast-container {
   position: fixed;
   bottom: 1.5rem;
   right: 1.5rem;
-  z-index: 200;
+  z-index: 10500;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  max-width: 380px;
+  max-width: 400px;
   pointer-events: none;
 }
 
@@ -2344,6 +2364,7 @@ p {
   gap: 0.6rem;
   pointer-events: auto;
   animation: slide-up 0.2s ease-out;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 @keyframes slide-up {
@@ -2353,6 +2374,7 @@ p {
 
 .toast.success { border-left: 4px solid #10b981; }
 .toast.error { border-left: 4px solid var(--btn-primary); }
+.toast.warning { border-left: 4px solid #d97706; }
 .toast.info { border-left: 4px solid var(--accent-secondary); }
 
 /* State Box */
@@ -3426,6 +3448,13 @@ p {
     width: calc(100% - 1.25rem);
     max-height: calc(100vh - 2rem);
   }
+
+  .toast-container {
+    bottom: 5.2rem;
+    left: 0.85rem;
+    right: 0.85rem;
+    max-width: none;
+  }
 }
 
 /* 4. Standard Mobile Screens (<= 480px) */
@@ -3990,5 +4019,14 @@ p {
   .popup-btn-cancel, .popup-btn-ok {
     padding: 8px 18px;
     font-size: 0.88rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

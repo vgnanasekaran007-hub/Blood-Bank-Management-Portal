@@ -76,11 +76,16 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     db_config = dj_database_url.config(
         default=DATABASE_URL,
-        conn_max_age=600,
+        conn_max_age=60,
         conn_health_checks=True,
     )
-    # Prevent slow or paused Supabase instances from hanging worker threads
-    db_config.setdefault('OPTIONS', {})['connect_timeout'] = 5
+    # Prevent slow, idle, or paused Supabase NAT connections from hanging worker threads
+    db_opts = db_config.setdefault('OPTIONS', {})
+    db_opts.setdefault('connect_timeout', 5)
+    db_opts.setdefault('keepalives', 1)
+    db_opts.setdefault('keepalives_idle', 30)
+    db_opts.setdefault('keepalives_interval', 10)
+    db_opts.setdefault('keepalives_count', 3)
     DATABASES = {
         'default': db_config
     }

@@ -4,6 +4,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.contrib.sessions.models import Session
 from django.db import transaction, connection
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
@@ -34,14 +35,18 @@ def log_audit(user, action_name, entity_type, entity_id, details=None, request=N
             ip = x_forwarded_for.split(',')[0].strip()
         else:
             ip = request.META.get('REMOTE_ADDR')
-    AuditLog.objects.create(
-        user=user if user and user.is_authenticated else None,
-        action=action_name,
-        entity_type=entity_type,
-        entity_id=str(entity_id),
-        details=details or {},
-        ip_address=ip
-    )
+    try:
+        AuditLog.objects.create(
+            user=user if user and user.is_authenticated else None,
+            action=action_name,
+            entity_type=entity_type,
+            entity_id=str(entity_id),
+            details=details or {},
+            ip_address=ip
+        )
+    except Exception:
+        # Never allow secondary audit write hiccups to crash primary operations
+        pass
 
 
 # ==========================================
@@ -80,9 +85,9 @@ class RegisterView(views.APIView):
                     user=user,
                     role=role,
                     phone_number=data['phone_number'],
-                    city=data.get('city', ''),
-                    district=data.get('district', ''),
-                    state=data.get('state', 'Tamil Nadu')
+                    city=data.get('city') or '',
+                    district=data.get('district') or '',
+                    state=data.get('state') or 'Tamil Nadu'
                 )
 
                 if role == 'donor':
@@ -91,17 +96,18 @@ class RegisterView(views.APIView):
                         blood_group=data['blood_group'],
                         phone_number=data['phone_number'],
                         date_of_birth=data.get('date_of_birth'),
-                        gender=data.get('gender', 'MALE'),
-                        city=data.get('city', ''),
-                        district=data.get('district', ''),
-                        state=data.get('state', 'Tamil Nadu'),
-                        pincode=data.get('pincode', ''),
-                        locality=data.get('locality', '') or data.get('city', ''),
-                        is_available=True,
+                        gender=data.get('gender') or 'MALE',
+                        city=data.get('city') or '',
+                        district=data.get('district') or '',
+                        state=data.get('state') or 'Tamil Nadu',
+                        pincode=data.get('pincode') or '',
+                        locality=data.get('locality') or data.get('city') or '',
+                        last_donation_date=data.get('last_donation_date'),
+                        is_available=data.get('is_available', True),
                         consent_to_contact=True
                     )
 
-                log_audit(user, "USER_REGISTERED", "User", user.id, {"role": role, "username": user.username}, request)
+            log_audit(user, "USER_REGISTERED", "User", user.id, {"role": role, "username": user.username}, request)
 
             # Auto login the registered user in session
             login(request, user)
@@ -187,10 +193,29 @@ class LogoutView(views.APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        if request.user and request.user.is_authenticated:
-            user = request.user
-            log_audit(user, "USER_LOGOUT", "User", user.id, {}, request)
+        # 1. Capture user before session flush for audit log
+        user = request.user if (request.user and request.user.is_authenticated) else None
+
+        # 2. Invalidate cross-origin Bearer/Token session key explicitly
+        auth_header = request.headers.get('Authorization', '')
+        parts = auth_header.split()
+        if len(parts) == 2 and parts[0].lower() in ('bearer', 'token', 'session'):
+            token_key = parts[1].strip()
+            if token_key:
+                try:
+                    Session.objects.filter(session_key=token_key).delete()
+                except Exception:
+                    pass
+
+        # 3. Flush Django cookie session safely
+        try:
             logout(request)
+        except Exception:
+            pass
+
+        if user:
+            log_audit(user, "USER_LOGOUT", "User", user.id, {}, request)
+
         return Response({"message": "Logged out successfully."}, status=status.HTTP_200_OK)
 
 
@@ -254,6 +279,8 @@ class DonorProfileView(views.APIView):
         ]
 
         update_data = {k: v for k, v in request.data.items() if k in allowed_fields}
+        if 'last_donation_date' in update_data and update_data['last_donation_date'] == '':
+            update_data['last_donation_date'] = None
 
         # Only admins can edit administrative notes
         if 'notes' in update_data and not check_is_admin(request.user):
@@ -458,6 +485,7 @@ class DonationRecordViewSet(viewsets.ModelViewSet):
             return Response({"error": "This donation record has already been verified and added to inventory."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            audit_payload = None
             with transaction.atomic():
                 if new_status == 'VERIFIED':
                     # Safe atomic increment using select_for_update
@@ -495,10 +523,10 @@ class DonationRecordViewSet(viewsets.ModelViewSet):
                     donor.total_donations += 1
                     donor.save()
 
-                    log_audit(request.user, "DONATION_VERIFIED", "DonationRecord", donation.id, {
+                    audit_payload = ("DONATION_VERIFIED", {
                         "units_added": donation.units,
                         "new_inventory": inventory.units_available
-                    }, request)
+                    })
 
                 elif new_status == 'REJECTED':
                     donation.status = 'REJECTED'
@@ -509,9 +537,12 @@ class DonationRecordViewSet(viewsets.ModelViewSet):
                         donation.notes = (donation.notes + " | " + admin_notes).strip(" | ")
                     donation.save()
 
-                    log_audit(request.user, "DONATION_REJECTED", "DonationRecord", donation.id, {
+                    audit_payload = ("DONATION_REJECTED", {
                         "reason": rejection_reason
-                    }, request)
+                    })
+
+            if audit_payload:
+                log_audit(request.user, audit_payload[0], "DonationRecord", donation.id, audit_payload[1], request)
 
             return Response({
                 "message": f"Donation record {new_status.lower()} successfully",
@@ -695,6 +726,7 @@ class BloodRequestViewSet(viewsets.ModelViewSet):
             return Response({"error": "Request has already been fulfilled and inventory issued. Status cannot be modified."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            audit_payload = None
             with transaction.atomic():
                 if target_status == 'FULFILLED':
                     # Atomic inventory deduction
@@ -737,10 +769,10 @@ class BloodRequestViewSet(viewsets.ModelViewSet):
                         remarks=f"Dispatched {blood_req.units_needed} units to {blood_req.hospital_name} for patient {blood_req.patient_name} (Request #{blood_req.id})"
                     )
 
-                    log_audit(user, "REQUEST_FULFILLED", "BloodRequest", blood_req.id, {
+                    audit_payload = ("REQUEST_FULFILLED", {
                         "units_deducted": blood_req.units_needed,
                         "stock_remaining": inventory.units_available
-                    }, request)
+                    })
 
                 elif target_status == 'APPROVED':
                     blood_req.status = 'APPROVED'
@@ -749,7 +781,7 @@ class BloodRequestViewSet(viewsets.ModelViewSet):
                     if remarks:
                         blood_req.admin_remarks = remarks
                     blood_req.save()
-                    log_audit(user, "REQUEST_APPROVED", "BloodRequest", blood_req.id, {"remarks": remarks}, request)
+                    audit_payload = ("REQUEST_APPROVED", {"remarks": remarks})
 
                 elif target_status == 'UNDER_REVIEW':
                     blood_req.status = 'UNDER_REVIEW'
@@ -758,7 +790,7 @@ class BloodRequestViewSet(viewsets.ModelViewSet):
                     if remarks:
                         blood_req.admin_remarks = remarks
                     blood_req.save()
-                    log_audit(user, "REQUEST_UNDER_REVIEW", "BloodRequest", blood_req.id, {}, request)
+                    audit_payload = ("REQUEST_UNDER_REVIEW", {})
 
                 elif target_status in ('REJECTED', 'CANCELLED'):
                     blood_req.status = target_status
@@ -767,7 +799,10 @@ class BloodRequestViewSet(viewsets.ModelViewSet):
                     if remarks:
                         blood_req.admin_remarks = remarks
                     blood_req.save()
-                    log_audit(user, f"REQUEST_{target_status}", "BloodRequest", blood_req.id, {"remarks": remarks}, request)
+                    audit_payload = (f"REQUEST_{target_status}", {"remarks": remarks})
+
+            if audit_payload:
+                log_audit(user, audit_payload[0], "BloodRequest", blood_req.id, audit_payload[1], request)
 
             return Response({
                 "message": f"Blood request status updated to '{target_status}'",

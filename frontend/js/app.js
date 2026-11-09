@@ -5,7 +5,17 @@ import { store, filterBaselineDonors } from './state.js';
 window.store = store;
 window.api = api;
 
-// Toast Notification
+function escapeHtml(value) {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Toast Notification (XSS-safe text rendering)
 export function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
   if (!container) return;
@@ -13,7 +23,9 @@ export function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.setAttribute('role', 'status');
-  toast.innerHTML = `<span>${message}</span>`;
+  const span = document.createElement('span');
+  span.textContent = message === null || message === undefined ? '' : String(message);
+  toast.appendChild(span);
   container.appendChild(toast);
 
   setTimeout(() => {
@@ -26,7 +38,12 @@ export function showToast(message, type = 'info') {
 function formatDate(isoStr) {
   if (!isoStr) return 'N/A';
   const d = new Date(isoStr);
+  if (Number.isNaN(d.getTime())) return String(isoStr);
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function getTodayIso() {
+  return new Date().toISOString().split('T')[0];
 }
 
 // ==========================================
@@ -66,10 +83,12 @@ function renderTickerAndInventory(state) {
   const tickerWrap = document.getElementById('ticker-items');
   if (tickerWrap && state.inventory.length) {
     tickerWrap.innerHTML = state.inventory.map(item => {
-      const isShortage = item.units_available <= item.min_threshold;
+      const bg = escapeHtml(item.blood_group);
+      const units = Number(item.units_available) || 0;
+      const isShortage = units <= (Number(item.min_threshold) || 0);
       return `
-        <span class="ticker-pill ${isShortage ? 'shortage' : ''}" onclick="window.switchModule('inventory', true)" style="cursor: pointer;" title="Click to view ${item.blood_group} stock in inventory">
-          <strong>${item.blood_group}:</strong> ${item.units_available} units
+        <span class="ticker-pill ${isShortage ? 'shortage' : ''}" onclick="window.switchModule('inventory', true)" style="cursor: pointer;" title="Click to view ${bg} stock in inventory">
+          <strong>${bg}:</strong> ${units} units
           ${isShortage ? '(Critical Shortage)' : ''}
         </span>
       `;
@@ -79,15 +98,18 @@ function renderTickerAndInventory(state) {
   const inventoryGrid = document.getElementById('inventory-matrix-grid');
   if (inventoryGrid && state.inventory.length) {
     inventoryGrid.innerHTML = state.inventory.map(item => {
+      const bg = escapeHtml(item.blood_group);
+      const units = Number(item.units_available) || 0;
+      const minThreshold = Number(item.min_threshold) || 0;
       const statusClass = item.status === 'HEALTHY' ? 'healthy' : (item.status === 'LOW_STOCK' ? 'low' : 'critical');
       const statusLabel = item.status === 'HEALTHY' ? 'Adequate' : (item.status === 'LOW_STOCK' ? 'Low Stock' : 'Critical Depleted');
       return `
-        <div class="inventory-card" onclick="window.openRequestModal('${item.blood_group}', 'Chennai')" style="cursor: pointer;" title="Click to request ${item.blood_group} units">
-          <div class="blood-group-tag">${item.blood_group}</div>
-          <div class="units-num tabular-nums">${item.units_available}</div>
+        <div class="inventory-card" data-blood="${bg}" data-district="Chennai" onclick="window.openRequestModal(this.dataset.blood, this.dataset.district)" style="cursor: pointer;" title="Click to request ${bg} units">
+          <div class="blood-group-tag">${bg}</div>
+          <div class="units-num tabular-nums">${units}</div>
           <div class="units-label">Units Available</div>
           <span class="inventory-status-pill ${statusClass}">${statusLabel}</span>
-          <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">Min: ${item.min_threshold} units &bull; Click to Request</div>
+          <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">Min: ${minThreshold} units &bull; Click to Request</div>
         </div>
       `;
     }).join('');
@@ -120,23 +142,24 @@ function renderSearchResults(state) {
   if (suggestionBox) {
     if (state.searchSuggestion) {
       suggestionBox.style.display = 'block';
-      suggestionBox.innerHTML = `<strong>Guidance:</strong> ${state.searchSuggestion}`;
+      suggestionBox.innerHTML = `<strong>Guidance:</strong> ${escapeHtml(state.searchSuggestion)}`;
     } else {
       suggestionBox.style.display = 'none';
     }
   }
 
   if (state.searchResults.length === 0) {
+    const activeBg = escapeHtml(state.searchFilters.blood_group || 'O+');
     container.innerHTML = `
       <div class="state-box" style="grid-column: 1 / -1;">
         <div class="state-icon">&#128269;</div>
         <h4 class="state-title">No Donors Registered Yet in this Area</h4>
         <p class="state-desc">No active voluntary donors are registered yet for the selected criteria. Be the first to register and save lives!</p>
         <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
-          <button class="btn btn-primary" onclick="window.openRegisterDonorModal()">
+          <button type="button" class="btn btn-primary" onclick="window.openRegisterDonorModal()">
             Register as Voluntary Donor
           </button>
-          <button class="btn btn-secondary" onclick="window.openRequestModal('${state.searchFilters.blood_group || 'O+'}')">
+          <button type="button" class="btn btn-secondary" data-blood="${activeBg}" onclick="window.openRequestModal(this.dataset.blood)">
             Submit Emergency Request
           </button>
         </div>
@@ -145,13 +168,20 @@ function renderSearchResults(state) {
     return;
   }
 
-  container.innerHTML = state.searchResults.map(donor => `
+  container.innerHTML = state.searchResults.map(donor => {
+    const bg = escapeHtml(donor.blood_group);
+    const displayName = escapeHtml(donor.display_name);
+    const donorCode = escapeHtml(donor.donor_code);
+    const district = escapeHtml(donor.district);
+    const locationRight = escapeHtml(donor.city || donor.state || 'Tamil Nadu');
+    const donationsCount = Number(donor.total_donations) || 0;
+    return `
     <div class="donor-card">
       <div class="donor-card-top">
-        <div class="donor-blood-badge">${donor.blood_group}</div>
+        <div class="donor-blood-badge">${bg}</div>
         <div class="donor-meta-info">
-          <h4 class="donor-name">${donor.display_name}</h4>
-          <span class="donor-code">${donor.donor_code}</span>
+          <h4 class="donor-name">${displayName}</h4>
+          <span class="donor-code">${donorCode}</span>
         </div>
         <div class="donor-avatar-silhouette" aria-hidden="true">
           <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor">
@@ -165,14 +195,14 @@ function renderSearchResults(state) {
           <svg class="detail-icon icon-pin" width="16" height="16" viewBox="0 0 24 24" fill="#ff1a3c" stroke="none">
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
           </svg>
-          <span class="detail-text">${donor.district}, ${donor.city || donor.state || 'Tamil Nadu'}</span>
+          <span class="detail-text">${district}, ${locationRight}</span>
         </div>
         <div class="donor-detail-item">
           <svg class="detail-icon icon-check" width="16" height="16" viewBox="0 0 24 24" fill="#10b981" stroke="none">
             <circle cx="12" cy="12" r="10" fill="#10b981"/>
             <path d="m9 12 2 2 4-4" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
           </svg>
-          <span class="detail-text">${donor.total_donations} Previous Donation(s)</span>
+          <span class="detail-text">${donationsCount} Previous Donation(s)</span>
         </div>
         <div class="donor-detail-item">
           <svg class="detail-icon icon-drop" width="16" height="16" viewBox="0 0 24 24" fill="#ffffff" stroke="none">
@@ -189,19 +219,20 @@ function renderSearchResults(state) {
         <span>Contact protected by privacy policy. Details via verified blood request.</span>
       </div>
 
-      <button type="button" class="donor-card-request-btn" onclick="window.openRequestModal('${donor.blood_group}', '${donor.district}')" title="Request ${donor.blood_group} via Portal">
+      <button type="button" class="donor-card-request-btn" data-blood="${bg}" data-district="${district}" onclick="window.openRequestModal(this.dataset.blood, this.dataset.district)" title="Request ${bg} via Portal">
         <svg class="request-plane-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="22" y1="2" x2="11" y2="13"/>
           <polygon points="22 2 15 22 11 13 2 9 22 2"/>
         </svg>
-        <span>Request ${donor.blood_group} via Portal</span>
+        <span>Request ${bg} via Portal</span>
         <svg class="request-arrow-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="5" y1="12" x2="19" y2="12"/>
           <polyline points="12 5 19 12 12 19"/>
         </svg>
       </button>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 window.renderSearchResults = renderSearchResults;
 
@@ -217,7 +248,7 @@ function renderDonorPortal(state) {
         <div class="state-icon">&#129656;</div>
         <h4 class="state-title">Donor Registration Required</h4>
         <p class="state-desc">You are not registered as a voluntary blood donor yet. Register now to save lives and manage your availability.</p>
-        <button class="btn btn-primary" onclick="window.openRegisterDonorModal()">Register as Voluntary Donor</button>
+        <button type="button" class="btn btn-primary" onclick="window.openRegisterDonorModal()">Register as Voluntary Donor</button>
       </div>
     `;
     return;
@@ -231,39 +262,39 @@ function renderDonorPortal(state) {
       <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
         <div>
           <span class="hero-pill-badge">Registered Voluntary Donor</span>
-          <h3>${profile.full_name || profile.username}</h3>
-          <p style="color: var(--text-muted); font-size: 0.875rem;">Blood Group: <strong>${profile.blood_group}</strong> | Location: ${profile.district}, ${profile.city}</p>
+          <h3>${escapeHtml(profile.full_name || profile.username)}</h3>
+          <p style="color: #cbd5e1; font-size: 0.875rem;">Blood Group: <strong>${escapeHtml(profile.blood_group)}</strong> | Location: ${escapeHtml(profile.district)}, ${escapeHtml(profile.city)}</p>
         </div>
         <div style="text-align: right;">
-          <div style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--text-heading);">Availability Status:</div>
-          <button id="toggle-availability-btn" class="btn ${profile.is_available ? 'btn-success' : 'btn-secondary'} btn-sm">
+          <div style="font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.35rem; color: #f8fafc;">Availability Status:</div>
+          <button type="button" id="toggle-availability-btn" class="btn ${profile.is_available ? 'btn-success' : 'btn-secondary'} btn-sm">
             ${profile.is_available ? '&#9679; Available for Emergency Call' : '&#9675; Currently Unavailable'}
           </button>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 38, 63, 0.25);">
         <div class="stat-card">
           <div class="stat-title">Last Donation Date</div>
-          <div class="stat-value" style="font-size: 1.25rem;">${formatDate(profile.last_donation_date)}</div>
-          <div class="stat-subtext">${days !== null ? `${days} days ago` : 'First-time donor'}</div>
+          <div class="stat-value" style="font-size: 1.25rem;">${escapeHtml(formatDate(profile.last_donation_date))}</div>
+          <div class="stat-subtext">${days !== null && days !== undefined ? `${Number(days)} days ago` : 'First-time donor'}</div>
         </div>
         <div class="stat-card">
           <div class="stat-title">Clinical Safe Interval</div>
-          <div class="stat-value" style="font-size: 1.25rem; color: ${isEligible ? '#059669' : '#d97706'};">
+          <div class="stat-value" style="font-size: 1.25rem; color: ${isEligible ? '#10b981' : '#f59e0b'};">
             ${isEligible ? 'Eligible Now' : 'Resting Period'}
           </div>
           <div class="stat-subtext">${isEligible ? 'Standard 90-day interval fulfilled' : 'Minimum 90 days required between donations'}</div>
         </div>
         <div class="stat-card">
           <div class="stat-title">Lifetime Donations</div>
-          <div class="stat-value tabular-nums" style="font-size: 1.5rem;">${profile.total_donations}</div>
+          <div class="stat-value tabular-nums" style="font-size: 1.5rem;">${Number(profile.total_donations) || 0}</div>
           <div class="stat-subtext">Verified life-saving units</div>
         </div>
       </div>
 
       <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
-        <button class="btn btn-secondary btn-sm" onclick="window.openLogDonationModal()">Log Walk-in Donation</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.openLogDonationModal()">Log Walk-in Donation</button>
       </div>
     </div>
 
@@ -294,10 +325,12 @@ function renderDonorPortal(state) {
     </div>
   `;
 
-  // Availability toggle
+  // Availability toggle with lock
   const toggleBtn = document.getElementById('toggle-availability-btn');
   if (toggleBtn) {
     toggleBtn.addEventListener('click', async () => {
+      if (toggleBtn.disabled) return;
+      toggleBtn.disabled = true;
       try {
         const updated = await api.donors.updateProfile({ is_available: !profile.is_available });
         store.set({ donorProfile: updated.profile });
@@ -305,6 +338,7 @@ function renderDonorPortal(state) {
         renderDonorPortal(store.state);
       } catch (err) {
         showToast(err.message, 'error');
+        toggleBtn.disabled = false;
       }
     });
   }
@@ -321,11 +355,11 @@ function renderDonorPortal(state) {
           : (d.status === 'PENDING' ? '<span class="badge badge-review">Pending Staff Verification</span>' : '<span class="badge badge-rejected">Rejected</span>');
         return `
           <tr>
-            <td class="tabular-nums">#DON-${d.id}</td>
-            <td>${formatDate(d.donation_date)}</td>
-            <td><strong style="color: var(--btn-primary);">${d.blood_group}</strong></td>
-            <td class="tabular-nums">${d.units} unit</td>
-            <td>${d.hospital_or_camp}</td>
+            <td class="tabular-nums">#DON-${Number(d.id)}</td>
+            <td>${escapeHtml(formatDate(d.donation_date))}</td>
+            <td><strong style="color: var(--btn-primary);">${escapeHtml(d.blood_group)}</strong></td>
+            <td class="tabular-nums">${Number(d.units)} unit</td>
+            <td>${escapeHtml(d.hospital_or_camp)}</td>
             <td>${statusBadge}</td>
           </tr>
         `;
@@ -353,6 +387,9 @@ function renderRequestsWorkflow(state) {
   }
 
   container.innerHTML = requests.map(req => {
+    const reqId = Number(req.id);
+    const bg = escapeHtml(req.blood_group);
+    const unitsNeeded = Number(req.units_needed) || 1;
     let badgeClass = 'badge-submitted';
     if (req.status === 'UNDER_REVIEW') badgeClass = 'badge-review';
     if (req.status === 'APPROVED') badgeClass = 'badge-approved';
@@ -370,19 +407,19 @@ function renderRequestsWorkflow(state) {
     if (isAdmin) {
       if (req.status === 'SUBMITTED') {
         actionButtons = `
-          <button class="btn btn-secondary btn-sm" onclick="window.updateRequestStatus(${req.id}, 'UNDER_REVIEW')">Review</button>
-          <button class="btn btn-success btn-sm" onclick="window.updateRequestStatus(${req.id}, 'APPROVED')">Approve</button>
-          <button class="btn btn-danger btn-sm" onclick="window.updateRequestStatus(${req.id}, 'REJECTED')">Reject</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.updateRequestStatus(${reqId}, 'UNDER_REVIEW')">Review</button>
+          <button type="button" class="btn btn-success btn-sm" onclick="window.updateRequestStatus(${reqId}, 'APPROVED')">Approve</button>
+          <button type="button" class="btn btn-danger btn-sm" onclick="window.updateRequestStatus(${reqId}, 'REJECTED')">Reject</button>
         `;
       } else if (req.status === 'UNDER_REVIEW') {
         actionButtons = `
-          <button class="btn btn-success btn-sm" onclick="window.updateRequestStatus(${req.id}, 'APPROVED')">Approve</button>
-          <button class="btn btn-danger btn-sm" onclick="window.updateRequestStatus(${req.id}, 'REJECTED')">Reject</button>
+          <button type="button" class="btn btn-success btn-sm" onclick="window.updateRequestStatus(${reqId}, 'APPROVED')">Approve</button>
+          <button type="button" class="btn btn-danger btn-sm" onclick="window.updateRequestStatus(${reqId}, 'REJECTED')">Reject</button>
         `;
       } else if (req.status === 'APPROVED') {
         actionButtons = `
-          <button class="btn btn-primary btn-sm" onclick="window.fulfillBloodRequest(${req.id}, '${req.blood_group}', ${req.units_needed})">
-            Fulfill & Dispatch (${req.units_needed} units)
+          <button type="button" class="btn btn-primary btn-sm" data-blood="${bg}" onclick="window.fulfillBloodRequest(${reqId}, this.dataset.blood, ${unitsNeeded})">
+            Fulfill & Dispatch (${unitsNeeded} units)
           </button>
         `;
       } else {
@@ -391,28 +428,28 @@ function renderRequestsWorkflow(state) {
     } else {
       if (req.status === 'SUBMITTED' || req.status === 'UNDER_REVIEW') {
         actionButtons = `
-          <button class="btn btn-secondary btn-sm" onclick="window.cancelRequest(${req.id})">Cancel</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="window.cancelRequest(${reqId})">Cancel</button>
         `;
       } else {
-        actionButtons = `<span style="font-size: 0.75rem; color: var(--text-muted);">${req.status}</span>`;
+        actionButtons = `<span style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(req.status)}</span>`;
       }
     }
 
     return `
       <tr>
-        <td class="tabular-nums">#REQ-${req.id}</td>
+        <td class="tabular-nums">#REQ-${reqId}</td>
         <td>
-          <strong style="color: var(--text-heading);">${req.patient_name}</strong>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">${req.patient_age} yrs, ${req.patient_gender}</div>
+          <strong style="color: var(--text-heading);">${escapeHtml(req.patient_name)}</strong>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">${Number(req.patient_age)} yrs, ${escapeHtml(req.patient_gender)}</div>
         </td>
-        <td><strong style="color: var(--btn-primary); font-size: 1rem;">${req.blood_group}</strong></td>
-        <td class="tabular-nums"><strong>${req.units_needed}</strong> unit(s)</td>
+        <td><strong style="color: var(--btn-primary); font-size: 1rem;">${bg}</strong></td>
+        <td class="tabular-nums"><strong>${unitsNeeded}</strong> unit(s)</td>
         <td>
-          <div>${req.hospital_name}</div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">${req.district}</div>
+          <div>${escapeHtml(req.hospital_name)}</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(req.district)}</div>
         </td>
-        <td><span class="badge ${urgencyClass}">${req.urgency}</span></td>
-        <td><span class="badge ${badgeClass}">${req.status}</span></td>
+        <td><span class="badge ${urgencyClass}">${escapeHtml(req.urgency)}</span></td>
+        <td><span class="badge ${badgeClass}">${escapeHtml(req.status)}</span></td>
         <td><div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">${actionButtons}</div></td>
       </tr>
     `;
@@ -440,18 +477,18 @@ function renderAdminDonationsQueue(state) {
     <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.1rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
       <div>
         <div style="font-weight: 700; color: var(--text-heading);">
-          ${item.donor_name} (<span style="color: var(--btn-primary);">${item.blood_group}</span> - ${item.units} unit)
+          ${escapeHtml(item.donor_name)} (<span style="color: var(--btn-primary);">${escapeHtml(item.blood_group)}</span> - ${Number(item.units)} unit)
         </div>
         <div style="font-size: 0.8125rem; color: var(--text-muted);">
-          Date: ${formatDate(item.donation_date)} | Center: ${item.hospital_or_camp}
+          Date: ${escapeHtml(formatDate(item.donation_date))} | Center: ${escapeHtml(item.hospital_or_camp)}
         </div>
-        ${item.notes ? `<div style="font-size: 0.75rem; color: var(--text-body); margin-top: 0.25rem;"><em>"${item.notes}"</em></div>` : ''}
+        ${item.notes ? `<div style="font-size: 0.75rem; color: var(--text-body); margin-top: 0.25rem;"><em>"${escapeHtml(item.notes)}"</em></div>` : ''}
       </div>
       <div style="display: flex; gap: 0.5rem;">
-        <button class="btn btn-success btn-sm" onclick="window.verifyDonationRecord(${item.id}, 'VERIFIED')">
+        <button type="button" class="btn btn-success btn-sm" onclick="window.verifyDonationRecord(${Number(item.id)}, 'VERIFIED')">
           &#10003; Verify & Add to Stock
         </button>
-        <button class="btn btn-danger btn-sm" onclick="window.verifyDonationRecord(${item.id}, 'REJECTED')">
+        <button type="button" class="btn btn-danger btn-sm" onclick="window.verifyDonationRecord(${Number(item.id)}, 'REJECTED')">
           Reject
         </button>
       </div>
@@ -464,26 +501,34 @@ function renderAdminConsole(state) {
   if (state.role !== 'admin') return;
 
   const kpis = state.kpis || {};
-  document.getElementById('kpi-total-donors').textContent = kpis.total_donors || 0;
-  document.getElementById('kpi-active-donors').textContent = kpis.active_donors || 0;
-  document.getElementById('kpi-total-units').textContent = kpis.total_units_in_stock || 0;
-  document.getElementById('kpi-pending-donations').textContent = kpis.pending_donations || 0;
-  document.getElementById('kpi-pending-requests').textContent = kpis.pending_requests || 0;
-  document.getElementById('kpi-fulfilled-requests').textContent = kpis.fulfilled_requests || 0;
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  setText('kpi-total-donors', kpis.total_donors || 0);
+  setText('kpi-active-donors', kpis.active_donors || 0);
+  setText('kpi-total-units', kpis.total_units_in_stock || 0);
+  setText('kpi-pending-donations', kpis.pending_donations || 0);
+  setText('kpi-pending-requests', kpis.pending_requests || 0);
+  setText('kpi-fulfilled-requests', kpis.fulfilled_requests || 0);
 
   const auditContainer = document.getElementById('admin-audit-logs-body');
   if (auditContainer && state.auditLogs) {
-    auditContainer.innerHTML = state.auditLogs.map(log => `
-      <tr>
-        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">${formatDate(log.created_at)}</td>
-        <td><strong style="color: var(--text-heading);">${log.user_name}</strong></td>
-        <td><span class="badge" style="background: var(--bg-secondary); color: var(--text-heading); border: 1px solid var(--border-color);">${log.action}</span></td>
-        <td>${log.entity_type} #${log.entity_id}</td>
-        <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-          ${JSON.stringify(log.details)}
-        </td>
-      </tr>
-    `).join('');
+    if (!state.auditLogs.length) {
+      auditContainer.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">No audit log entries recorded yet.</td></tr>`;
+    } else {
+      auditContainer.innerHTML = state.auditLogs.map(log => `
+        <tr>
+          <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">${escapeHtml(formatDate(log.created_at))}</td>
+          <td><strong style="color: var(--text-heading);">${escapeHtml(log.user_name)}</strong></td>
+          <td><span class="badge" style="background: var(--bg-secondary); color: var(--text-heading); border: 1px solid var(--border-color);">${escapeHtml(log.action)}</span></td>
+          <td>${escapeHtml(log.entity_type)} #${escapeHtml(log.entity_id)}</td>
+          <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ${escapeHtml(JSON.stringify(log.details))}
+          </td>
+        </tr>
+      `).join('');
+    }
   }
 }
 
@@ -657,23 +702,32 @@ export async function refreshAllData(options = {}) {
     if (invRes && invRes.inventory && invRes.inventory.length) {
       store.set({
         inventory: invRes.inventory,
-        inventoryTotal: invRes.total_units || 0,
+        inventoryTotal: invRes.total_units ?? 0,
         criticalGroups: invRes.critical_groups || [],
-        totalDonors: invRes.total_donors || store.state.totalDonors,
-        fulfilledRequests: invRes.fulfilled_requests || store.state.fulfilledRequests,
+        totalDonors: typeof invRes.total_donors === 'number' ? invRes.total_donors : store.state.totalDonors,
+        fulfilledRequests: typeof invRes.fulfilled_requests === 'number' ? invRes.fulfilled_requests : store.state.fulfilledRequests,
       });
       renderTickerAndInventory(store.state);
     }
 
-    if (searchRes && Array.isArray(searchRes.donors) && searchRes.donors.length > 0) {
-      store.set({
-        searchResults: searchRes.donors,
-        searchSuggestion: searchRes.suggestion,
-      });
+    if (searchRes && Array.isArray(searchRes.donors)) {
+      const searchUpdates = {
+        searchSuggestion: searchRes.suggestion || null,
+      };
+      // Refresh cached donor directory ONLY when unfiltered and non-empty
+      if (!blood_group && !district && !city && searchRes.donors.length > 0) {
+        searchUpdates.allDonors = searchRes.donors;
+      }
+      if (searchRes.donors.length > 0 || (invRes && invRes.total_donors > 0)) {
+        searchUpdates.searchResults = searchRes.donors;
+      } else {
+        searchUpdates.searchResults = currentFiltered;
+      }
+      store.set(searchUpdates);
     } else {
       store.set({
         searchResults: currentFiltered,
-        searchSuggestion: searchRes ? searchRes.suggestion : null,
+        searchSuggestion: null,
       });
     }
     renderSearchResults(store.state);
@@ -681,32 +735,37 @@ export async function refreshAllData(options = {}) {
     if (store.state.user) {
       if (store.state.role === 'admin') {
         const [kpiRes, adminReqs, adminDons, auditRes] = await Promise.all([
-          api.admin.getKPIs(),
-          api.requests.list(),
-          api.donations.list(),
-          api.admin.getAuditLogs(),
+          api.admin.getKPIs().catch(() => null),
+          api.requests.list().catch(() => null),
+          api.donations.list().catch(() => null),
+          api.admin.getAuditLogs().catch(() => null),
         ]);
-        store.set({
-          kpis: kpiRes.kpis || kpiRes,
-          adminRequests: adminReqs.results || adminReqs,
-          adminDonations: adminDons.results || adminDons,
-          auditLogs: auditRes.logs || [],
-          totalDonors: (kpiRes.kpis && kpiRes.kpis.total_donors) || store.state.totalDonors,
-          fulfilledRequests: (kpiRes.kpis && kpiRes.kpis.fulfilled_requests) || store.state.fulfilledRequests,
-        });
+        const adminUpdates = {};
+        if (kpiRes) {
+          const k = kpiRes.kpis || kpiRes;
+          adminUpdates.kpis = k;
+          if (k && typeof k.total_donors === 'number') adminUpdates.totalDonors = k.total_donors;
+          if (k && typeof k.fulfilled_requests === 'number') adminUpdates.fulfilledRequests = k.fulfilled_requests;
+        }
+        if (adminReqs) adminUpdates.adminRequests = adminReqs.results || adminReqs;
+        if (adminDons) adminUpdates.adminDonations = adminDons.results || adminDons;
+        if (auditRes) adminUpdates.auditLogs = auditRes.logs || [];
+        if (Object.keys(adminUpdates).length > 0) {
+          store.set(adminUpdates);
+        }
       } else {
-        const [myReqs, myDons] = await Promise.all([
-          api.requests.list(),
-          api.donations.list(),
+        const shouldFetchDonor = Boolean(store.state.donorProfile || store.state.role === 'donor' || store.state.user?.is_donor);
+        const [myReqs, myDons, donorRes] = await Promise.all([
+          api.requests.list().catch(() => null),
+          api.donations.list().catch(() => null),
+          shouldFetchDonor ? api.donors.getProfile().catch(() => null) : Promise.resolve(null),
         ]);
-        store.set({
-          myRequests: myReqs.results || myReqs,
-          myDonations: myDons.results || myDons,
-        });
-
-        if (store.state.donorProfile) {
-          const donorRes = await api.donors.getProfile();
-          store.set({ donorProfile: donorRes });
+        const userUpdates = {};
+        if (myReqs) userUpdates.myRequests = myReqs.results || myReqs;
+        if (myDons) userUpdates.myDonations = myDons.results || myDons;
+        if (donorRes && donorRes.blood_group) userUpdates.donorProfile = donorRes;
+        if (Object.keys(userUpdates).length > 0) {
+          store.set(userUpdates);
         }
       }
     }
@@ -830,27 +889,37 @@ window.switchRole = async function (role) {
   const dropdown = document.getElementById('role-menu-dropdown');
   if (dropdown) dropdown.classList.remove('show');
 
-  try {
-    if (role === 'admin') {
-      if (store.state.user && store.state.role === 'admin') {
-        window.switchModule('admin_console', true);
-        showToast('Viewing Staff Administrator Console', 'info');
-      } else {
-        showToast('Please sign in with administrator credentials to access Staff Console.', 'warning');
-        window.openLoginModal();
-      }
+  if (role === 'admin') {
+    if (store.state.user && store.state.role === 'admin') {
+      window.switchModule('admin_console', true);
+      showToast('Viewing Staff Administrator Console', 'info');
     } else {
-      await api.auth.logout();
-      showToast('Switched to Public View', 'info');
-      store.setUser(null, null);
-      await refreshAllData();
-      updateUIForAuth();
-      populateChecksheetEdit();
-      window.switchModule('search', true);
+      showToast('Please sign in with administrator credentials to access Staff Console.', 'warning');
+      window.openLoginModal();
     }
-  } catch (err) {
-    showToast(err.message, 'error');
+    return;
   }
+
+  // Instant 0ms local sign-out & state clear; server revocation runs safely in background
+  const wasLoggedIn = Boolean(store.state.user || localStorage.getItem('lifepulse_auth_token'));
+  const logoutPromise = wasLoggedIn ? api.auth.logout() : Promise.resolve();
+
+  store.setUser(null, null);
+  store.set({
+    myRequests: [],
+    adminRequests: [],
+    myDonations: [],
+    adminDonations: [],
+    kpis: {},
+    auditLogs: [],
+  });
+  updateUIForAuth();
+  populateChecksheetEdit();
+  window.closeMobileMenu();
+  window.switchModule('search', true);
+  showToast(wasLoggedIn ? 'Signed out cleanly. Switched to Public View.' : 'Switched to Public View', 'info');
+
+  logoutPromise.then(() => refreshAllData().catch(() => {})).catch(() => {});
 };
 
 window.handleLogout = async function () {
@@ -913,15 +982,29 @@ function populateChecksheetEdit() {
   const user = store.state.user;
   const profile = store.state.donorProfile;
   const promptBox = document.getElementById('checksheet-login-prompt');
+  const nonDonorBox = document.getElementById('checksheet-non-donor-notice');
+  const nonDonorDesc = document.getElementById('cs-non-donor-desc');
   const formWrap = document.getElementById('checksheet-edit-form-wrap');
 
-  if (!user || !profile) {
+  if (!user) {
     if (promptBox) promptBox.style.display = 'block';
+    if (nonDonorBox) nonDonorBox.style.display = 'none';
+    if (formWrap) formWrap.style.display = 'none';
+    return;
+  }
+
+  if (!profile) {
+    if (promptBox) promptBox.style.display = 'none';
+    if (nonDonorBox) nonDonorBox.style.display = 'block';
+    if (nonDonorDesc) {
+      nonDonorDesc.textContent = `Signed in as ${user.first_name || user.username} (${(store.state.role || 'user').toUpperCase()}). This account does not have a voluntary donor profile attached yet.`;
+    }
     if (formWrap) formWrap.style.display = 'none';
     return;
   }
 
   if (promptBox) promptBox.style.display = 'none';
+  if (nonDonorBox) nonDonorBox.style.display = 'none';
   if (formWrap) formWrap.style.display = 'block';
 
   const nameEl = document.getElementById('cs-edit-donor-name');
@@ -936,7 +1019,9 @@ function populateChecksheetEdit() {
   if (altPhoneInput) altPhoneInput.value = profile.alternate_phone || '';
 
   const distSelect = document.getElementById('cs-update-district');
-  if (distSelect && profile.district) distSelect.value = profile.district;
+  if (distSelect && profile.district && Array.from(distSelect.options).some(o => o.value === profile.district)) {
+    distSelect.value = profile.district;
+  }
 
   const cityInput = document.getElementById('cs-update-city');
   if (cityInput) cityInput.value = profile.city || '';
@@ -945,17 +1030,42 @@ function populateChecksheetEdit() {
   if (pinInput) pinInput.value = profile.pincode || '';
 
   const dateInput = document.getElementById('cs-update-last-donation');
-  if (dateInput && profile.last_donation_date) dateInput.value = profile.last_donation_date;
+  if (dateInput) dateInput.value = profile.last_donation_date || '';
 
   const availSelect = document.getElementById('cs-update-availability');
   if (availSelect) availSelect.value = profile.is_available ? 'true' : 'false';
 }
 
+function setSelectSafe(selectEl, targetValue, fallbackValue) {
+  if (!selectEl) return;
+  const hasMatch = targetValue && Array.from(selectEl.options).some(opt => opt.value === targetValue);
+  selectEl.value = hasMatch ? targetValue : fallbackValue;
+}
+
 window.openRequestModal = function (bloodGroup = 'O+', district = 'Chennai') {
   const modal = document.getElementById('request-modal');
   if (!modal) return;
-  document.getElementById('req-blood-group').value = bloodGroup;
-  document.getElementById('req-district').value = district;
+  setSelectSafe(document.getElementById('req-blood-group'), bloodGroup, 'O+');
+  setSelectSafe(document.getElementById('req-district'), district, 'Chennai');
+
+  const today = getTodayIso();
+  const reqDateInput = document.getElementById('req-required-date');
+  if (reqDateInput) {
+    reqDateInput.min = today;
+    if (!reqDateInput.value || reqDateInput.value < today) reqDateInput.value = today;
+  }
+
+  if (store.state.user) {
+    const contactPerson = document.getElementById('req-contact-person');
+    const contactPhone = document.getElementById('req-contact-phone');
+    if (contactPerson && !contactPerson.value) {
+      contactPerson.value = `${store.state.user.first_name || ''} ${store.state.user.last_name || ''}`.trim() || store.state.user.username || '';
+    }
+    if (contactPhone && !contactPhone.value && store.state.user.phone_number) {
+      contactPhone.value = store.state.user.phone_number;
+    }
+  }
+
   modal.classList.add('open');
 };
 
@@ -970,15 +1080,36 @@ window.closeModal = function (modalId) {
 window.continueAsPublicGuest = function () {
   sessionStorage.setItem('lifepulse_guest_visited', 'true');
   window.closeModal('login-modal');
-  window.switchRole('guest');
-  window.switchModule('search');
-  showToast('Welcome to LifePulse! Browsing in Public View.', 'info');
+  if (store.state.user) {
+    window.switchRole('guest');
+  } else {
+    window.switchModule('search');
+    showToast('Welcome to LifePulse! Browsing in Public View.', 'info');
+  }
 };
+
+function getDobBounds() {
+  const eighteenYearsAgo = new Date();
+  eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+  const sixtyFiveYearsAgo = new Date();
+  sixtyFiveYearsAgo.setFullYear(sixtyFiveYearsAgo.getFullYear() - 65);
+  return {
+    minDob: sixtyFiveYearsAgo.toISOString().split('T')[0],
+    maxDob: eighteenYearsAgo.toISOString().split('T')[0],
+  };
+}
 
 window.openRegisterDonorModal = function () {
   const dropdown = document.getElementById('role-menu-dropdown');
   if (dropdown) dropdown.classList.remove('show');
   const modal = document.getElementById('donor-register-modal');
+  const dobInput = document.getElementById('reg-dob');
+  if (dobInput) {
+    const { minDob, maxDob } = getDobBounds();
+    dobInput.min = minDob;
+    dobInput.max = maxDob;
+    if (!dobInput.value) dobInput.value = maxDob;
+  }
   if (modal) modal.classList.add('open');
 };
 
@@ -1030,7 +1161,18 @@ window.openLoginModal = function () {
 
 window.openLogDonationModal = function () {
   const modal = document.getElementById('log-donation-modal');
-  if (modal) modal.classList.add('open');
+  if (!modal) return;
+  const today = getTodayIso();
+  const donDateInput = document.getElementById('don-date');
+  if (donDateInput) {
+    donDateInput.max = today;
+    if (!donDateInput.value) donDateInput.value = today;
+  }
+  const bgSelect = document.getElementById('don-blood-group');
+  if (bgSelect && store.state.donorProfile?.blood_group) {
+    setSelectSafe(bgSelect, store.state.donorProfile.blood_group, 'O+');
+  }
+  modal.classList.add('open');
 };
 
 /**
@@ -1103,8 +1245,14 @@ window.showCustomConfirm = function ({
     }
 
     function onKey(e) {
-      if (e.key === 'Escape') onCancel();
-      else if (e.key === 'Enter') onOk();
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onCancel();
+      } else if (e.key === 'Enter') {
+        if (e.target === cancelBtn || e.target === closeBtn) return;
+        e.preventDefault();
+        onOk();
+      }
     }
 
     okBtn?.addEventListener('click', onOk);
@@ -1176,8 +1324,14 @@ window.showCustomPrompt = function ({
     }
 
     function onKey(e) {
-      if (e.key === 'Escape') onCancel();
-      else if (e.key === 'Enter') onOk();
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onCancel();
+      } else if (e.key === 'Enter') {
+        if (e.target === cancelBtn || e.target === closeBtn) return;
+        e.preventDefault();
+        onOk();
+      }
     }
 
     okBtn?.addEventListener('click', onOk);
@@ -1235,7 +1389,10 @@ window.showCustomAlert = function ({
     }
 
     function onKey(e) {
-      if (e.key === 'Escape' || e.key === 'Enter') onOk();
+      if (e.key === 'Escape' || e.key === 'Enter') {
+        e.preventDefault();
+        onOk();
+      }
     }
 
     okBtn?.addEventListener('click', onOk);
@@ -1251,10 +1408,13 @@ window.alert = function (msg) {
 };
 
 window.fulfillBloodRequest = async function (requestId, bloodGroup, unitsNeeded, skipConfirm = false) {
+  const safeId = Number(requestId);
+  const safeUnits = Number(unitsNeeded) || 1;
+  const safeBg = escapeHtml(bloodGroup);
   if (!skipConfirm) {
     const confirmed = await window.showCustomConfirm({
       title: 'Confirm <span class="popup-title-red">Action</span>',
-      htmlMessage: `Confirm atomic stock fulfillment for <strong>Request #${requestId}</strong>:<br>Deduct <strong>${unitsNeeded} units</strong> of <span class="popup-blood-badge">${bloodGroup}</span>`,
+      htmlMessage: `Confirm atomic stock fulfillment for <strong>Request #${safeId}</strong>:<br>Deduct <strong>${safeUnits} units</strong> of <span class="popup-blood-badge">${safeBg}</span>`,
       okText: 'OK',
       cancelText: 'Cancel'
     });
@@ -1271,11 +1431,13 @@ window.fulfillBloodRequest = async function (requestId, bloodGroup, unitsNeeded,
 };
 
 window.updateRequestStatus = async function (requestId, newStatus, optionalRemark) {
+  const safeId = Number(requestId);
+  const safeStatus = escapeHtml(newStatus);
   let remark = optionalRemark;
   if (optionalRemark === undefined) {
     remark = await window.showCustomPrompt({
-      title: `Update <span class="popup-title-red">Status (${newStatus})</span>`,
-      htmlMessage: `Enter optional remarks or clinical notes for updating Request <strong>#${requestId}</strong> to <strong>${newStatus}</strong>:`,
+      title: `Update <span class="popup-title-red">Status (${safeStatus})</span>`,
+      htmlMessage: `Enter optional remarks or clinical notes for updating Request <strong>#${safeId}</strong> to <strong>${safeStatus}</strong>:`,
       defaultValue: '',
       placeholder: 'e.g. Authorized and dispatched by staff...',
       okText: 'Update Status',
@@ -1294,9 +1456,10 @@ window.updateRequestStatus = async function (requestId, newStatus, optionalRemar
 };
 
 window.cancelRequest = async function (requestId) {
+  const safeId = Number(requestId);
   const confirmed = await window.showCustomConfirm({
     title: 'Confirm <span class="popup-title-red">Cancellation</span>',
-    htmlMessage: `Are you sure you want to cancel blood request <strong>#${requestId}</strong>? This action will mark the request as CANCELLED.`,
+    htmlMessage: `Are you sure you want to cancel blood request <strong>#${safeId}</strong>? This action will mark the request as CANCELLED.`,
     okText: 'Cancel Request',
     cancelText: 'Keep Request'
   });
@@ -1312,12 +1475,13 @@ window.cancelRequest = async function (requestId) {
 };
 
 window.verifyDonationRecord = async function (donationId, decision, optionalNotes, optionalReason) {
+  const safeId = Number(donationId);
   let notes = optionalNotes !== undefined ? optionalNotes : '';
   let reason = optionalReason !== undefined ? optionalReason : '';
   if (decision === 'REJECTED' && optionalReason === undefined) {
     reason = await window.showCustomPrompt({
       title: 'Clinical <span class="popup-title-red">Rejection Reason</span>',
-      htmlMessage: `Enter specific medical or clinical reason for rejecting donation record <strong>#${donationId}</strong>:`,
+      htmlMessage: `Enter specific medical or clinical reason for rejecting donation record <strong>#${safeId}</strong>:`,
       defaultValue: 'Hemoglobin below clinical threshold (<12.5 g/dL)',
       placeholder: 'Specify rejection criteria...',
       okText: 'Confirm Rejection',
@@ -1327,7 +1491,7 @@ window.verifyDonationRecord = async function (donationId, decision, optionalNote
   } else if (decision === 'VERIFIED' && optionalNotes === undefined) {
     notes = await window.showCustomPrompt({
       title: 'Clinical <span class="popup-title-red">Verification Notes</span>',
-      htmlMessage: `Enter optional clinical screening notes for verified donation unit <strong>#${donationId}</strong>:`,
+      htmlMessage: `Enter optional clinical screening notes for verified donation unit <strong>#${safeId}</strong>:`,
       defaultValue: 'Blood unit screened and verified normal.',
       placeholder: 'Screening lab notes...',
       okText: 'Approve & Stock',
@@ -1350,14 +1514,23 @@ function updateUIForAuth() {
   const userDisplay = document.getElementById('user-session-display');
   const adminNav = document.getElementById('nav-admin-console');
   const signoutBtn = document.getElementById('menu-signout-btn');
+  const signinBtn = document.getElementById('menu-signin-btn');
+  const mobileLoginBtn = document.getElementById('mobile-drawer-login-btn');
+  const mobileSignoutBtn = document.getElementById('mobile-drawer-signout-btn');
 
   if (userDisplay) {
     if (user) {
       userDisplay.textContent = `${user.first_name || user.username} (${role.toUpperCase()})`;
       if (signoutBtn) signoutBtn.style.display = 'flex';
+      if (signinBtn) signinBtn.style.display = 'none';
+      if (mobileLoginBtn) mobileLoginBtn.style.display = 'none';
+      if (mobileSignoutBtn) mobileSignoutBtn.style.display = 'inline-flex';
     } else {
       userDisplay.textContent = 'Public View';
       if (signoutBtn) signoutBtn.style.display = 'none';
+      if (signinBtn) signinBtn.style.display = 'flex';
+      if (mobileLoginBtn) mobileLoginBtn.style.display = 'inline-flex';
+      if (mobileSignoutBtn) mobileSignoutBtn.style.display = 'none';
     }
   }
 
@@ -1688,45 +1861,76 @@ async function initLifePulseApp() {
     });
   }
 
+  async function runWithSubmitLock(submitBtn, loadingLabel, fn) {
+    if (submitBtn && submitBtn.disabled) return;
+    const origHtml = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span class="auth-btn-spinner" aria-hidden="true"></span><span>${escapeHtml(loadingLabel)}</span>`;
+    }
+    try {
+      await fn();
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = origHtml;
+      }
+    }
+  }
+
   // Emergency request form
   const reqForm = document.getElementById('emergency-request-form');
   if (reqForm) {
     reqForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const formData = new FormData(reqForm);
-      const payload = {
-        patient_name: formData.get('patient_name'),
-        patient_age: parseInt(formData.get('patient_age'), 10),
-        patient_gender: formData.get('patient_gender'),
-        blood_group: formData.get('blood_group'),
-        units_needed: parseInt(formData.get('units_needed'), 10),
-        hospital_name: formData.get('hospital_name'),
-        hospital_address: formData.get('hospital_address'),
-        city: formData.get('city'),
-        district: formData.get('district'),
-        contact_person: formData.get('contact_person'),
-        contact_phone: formData.get('contact_phone'),
-        urgency: formData.get('urgency'),
-        medical_reason: formData.get('medical_reason'),
-        required_by_date: formData.get('required_by_date'),
-      };
-
-      try {
-        const res = await api.requests.create(payload);
-        showToast('Blood request submitted successfully to database!', 'success');
-        window.closeModal('request-modal');
-        reqForm.reset();
-
-        if (res.user && !store.state.user) {
-          store.setUser(res.user);
-          updateUIForAuth();
+      const submitBtn = document.getElementById('req-submit-btn') || reqForm.querySelector('button[type="submit"]');
+      await runWithSubmitLock(submitBtn, 'Submitting Request...', async () => {
+        const formData = new FormData(reqForm);
+        const patientAge = parseInt(formData.get('patient_age'), 10);
+        const unitsNeeded = parseInt(formData.get('units_needed'), 10);
+        if (!Number.isFinite(patientAge) || patientAge < 0 || patientAge > 120) {
+          showToast('Please enter a valid patient age between 0 and 120.', 'error');
+          return;
+        }
+        if (!Number.isFinite(unitsNeeded) || unitsNeeded < 1 || unitsNeeded > 10) {
+          showToast('Units needed must be between 1 and 10.', 'error');
+          return;
         }
 
-        await refreshAllData();
-        window.switchModule('requests');
-      } catch (err) {
-        showToast(`Request failed: ${err.message}`, 'error');
-      }
+        const payload = {
+          patient_name: String(formData.get('patient_name') || '').trim(),
+          patient_age: patientAge,
+          patient_gender: formData.get('patient_gender'),
+          blood_group: formData.get('blood_group'),
+          units_needed: unitsNeeded,
+          hospital_name: String(formData.get('hospital_name') || '').trim(),
+          hospital_address: String(formData.get('hospital_address') || '').trim(),
+          city: String(formData.get('city') || '').trim(),
+          district: formData.get('district'),
+          contact_person: String(formData.get('contact_person') || '').trim(),
+          contact_phone: String(formData.get('contact_phone') || '').trim(),
+          urgency: formData.get('urgency'),
+          medical_reason: String(formData.get('medical_reason') || '').trim(),
+          required_by_date: formData.get('required_by_date'),
+        };
+
+        try {
+          const res = await api.requests.create(payload);
+          showToast('Blood request submitted successfully to database!', 'success');
+          window.closeModal('request-modal');
+          reqForm.reset();
+
+          if (res.user && !store.state.user) {
+            store.setUser(res.user);
+            updateUIForAuth();
+          }
+
+          await refreshAllData();
+          window.switchModule('requests');
+        } catch (err) {
+          showToast(`Request failed: ${err.message}`, 'error');
+        }
+      });
     });
   }
 
@@ -1735,35 +1939,40 @@ async function initLifePulseApp() {
   if (donorForm) {
     donorForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const formData = new FormData(donorForm);
-      const payload = {
-        username: formData.get('username'),
-        email: formData.get('email'),
-        password: formData.get('password'),
-        full_name: formData.get('full_name'),
-        role: 'donor',
-        phone_number: formData.get('phone_number'),
-        blood_group: formData.get('blood_group'),
-        gender: formData.get('gender'),
-        date_of_birth: formData.get('date_of_birth'),
-        city: formData.get('city'),
-        district: formData.get('district'),
-        locality: formData.get('city'),
-      };
+      const submitBtn = document.getElementById('reg-submit-btn') || donorForm.querySelector('button[type="submit"]');
+      await runWithSubmitLock(submitBtn, 'Registering Donor...', async () => {
+        const formData = new FormData(donorForm);
+        const city = String(formData.get('city') || '').trim();
+        const payload = {
+          username: String(formData.get('username') || '').trim(),
+          email: String(formData.get('email') || '').trim(),
+          password: formData.get('password'),
+          full_name: String(formData.get('full_name') || '').trim(),
+          role: 'donor',
+          phone_number: String(formData.get('phone_number') || '').trim(),
+          blood_group: formData.get('blood_group'),
+          gender: formData.get('gender'),
+          date_of_birth: formData.get('date_of_birth'),
+          city,
+          district: formData.get('district'),
+          locality: city,
+        };
 
-      try {
-        const res = await api.auth.register(payload);
-        showToast('Donor profile registered and saved to database!', 'success');
-        window.closeModal('donor-register-modal');
-        donorForm.reset();
+        try {
+          const res = await api.auth.register(payload);
+          showToast('Donor profile registered and saved to database!', 'success');
+          window.closeModal('donor-register-modal');
+          donorForm.reset();
 
-        store.setUser(res.user, res.donor_profile || null);
-        await refreshAllData();
-        updateUIForAuth();
-        window.switchModule('donor_portal');
-      } catch (err) {
-        showToast(`Registration failed: ${err.message}`, 'error');
-      }
+          store.setUser(res.user, res.donor_profile || null);
+          updateUIForAuth();
+          populateChecksheetEdit();
+          window.switchModule('donor_portal');
+          refreshAllData().catch(err => console.warn('Post-register sync:', err));
+        } catch (err) {
+          showToast(`Registration failed: ${err.message}`, 'error');
+        }
+      });
     });
   }
 
@@ -1772,24 +1981,32 @@ async function initLifePulseApp() {
   if (donationForm) {
     donationForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const formData = new FormData(donationForm);
-      const payload = {
-        blood_group: formData.get('blood_group'),
-        units: parseInt(formData.get('units'), 10),
-        donation_date: formData.get('donation_date'),
-        hospital_or_camp: formData.get('hospital_or_camp'),
-        notes: formData.get('notes'),
-      };
+      const submitBtn = document.getElementById('don-submit-btn') || donationForm.querySelector('button[type="submit"]');
+      await runWithSubmitLock(submitBtn, 'Submitting Record...', async () => {
+        const formData = new FormData(donationForm);
+        const units = parseInt(formData.get('units'), 10);
+        if (!Number.isFinite(units) || units < 1 || units > 3) {
+          showToast('Donation units must be between 1 and 2.', 'error');
+          return;
+        }
+        const payload = {
+          blood_group: formData.get('blood_group'),
+          units,
+          donation_date: formData.get('donation_date'),
+          hospital_or_camp: String(formData.get('hospital_or_camp') || '').trim(),
+          notes: String(formData.get('notes') || '').trim(),
+        };
 
-      try {
-        await api.donations.create(payload);
-        showToast('Donation record saved to database! Awaiting staff verification.', 'success');
-        window.closeModal('log-donation-modal');
-        donationForm.reset();
-        await refreshAllData();
-      } catch (err) {
-        showToast(`Failed to log donation: ${err.message}`, 'error');
-      }
+        try {
+          await api.donations.create(payload);
+          showToast('Donation record saved to database! Awaiting staff verification.', 'success');
+          window.closeModal('log-donation-modal');
+          donationForm.reset();
+          await refreshAllData();
+        } catch (err) {
+          showToast(`Failed to log donation: ${err.message}`, 'error');
+        }
+      });
     });
   }
 
@@ -1798,37 +2015,48 @@ async function initLifePulseApp() {
   if (csRegForm) {
     csRegForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const formData = new FormData(csRegForm);
-      const payload = {
-        username: formData.get('username'),
-        email: formData.get('email'),
-        password: formData.get('password'),
-        full_name: formData.get('full_name'),
-        role: 'donor',
-        phone_number: formData.get('phone_number'),
-        blood_group: formData.get('blood_group'),
-        gender: formData.get('gender'),
-        date_of_birth: formData.get('date_of_birth'),
-        city: formData.get('city'),
-        district: formData.get('district'),
-        pincode: formData.get('pincode'),
-        last_donation_date: formData.get('last_donation_date') || null,
-        is_available: formData.get('is_available') === 'true',
-      };
+      const submitBtn = document.getElementById('cs-submit-btn') || csRegForm.querySelector('button[type="submit"]');
+      await runWithSubmitLock(submitBtn, 'Saving Checksheet...', async () => {
+        const formData = new FormData(csRegForm);
+        const payload = {
+          username: String(formData.get('username') || '').trim(),
+          email: String(formData.get('email') || '').trim(),
+          password: formData.get('password'),
+          full_name: String(formData.get('full_name') || '').trim(),
+          role: 'donor',
+          phone_number: String(formData.get('phone_number') || '').trim(),
+          blood_group: formData.get('blood_group'),
+          gender: formData.get('gender'),
+          date_of_birth: formData.get('date_of_birth'),
+          city: String(formData.get('city') || '').trim(),
+          district: formData.get('district'),
+          pincode: String(formData.get('pincode') || '').trim(),
+          last_donation_date: formData.get('last_donation_date') || null,
+          is_available: formData.get('is_available') === 'true',
+        };
 
-      try {
-        const res = await api.auth.register(payload);
-        showToast('Donor checksheet saved directly to database!', 'success');
-        csRegForm.reset();
-        const authCheck = await api.auth.me();
-        store.setUser(authCheck.user, authCheck.donor_profile);
-        await refreshAllData();
-        updateUIForAuth();
-        populateChecksheetEdit();
-        window.setChecksheetMode('update');
-      } catch (err) {
-        showToast(`Checksheet submission failed: ${err.message}`, 'error');
-      }
+        try {
+          const res = await api.auth.register(payload);
+          showToast('Donor checksheet saved directly to database!', 'success');
+          csRegForm.reset();
+          const lastDonEl = document.getElementById('cs-last-donation');
+          if (lastDonEl) lastDonEl.disabled = false;
+          const csDobEl = document.getElementById('cs-dob');
+          if (csDobEl) {
+            const { minDob, maxDob } = getDobBounds();
+            csDobEl.min = minDob;
+            csDobEl.max = maxDob;
+            csDobEl.value = maxDob;
+          }
+          store.setUser(res.user, res.donor_profile || null);
+          updateUIForAuth();
+          populateChecksheetEdit();
+          window.setChecksheetMode('update');
+          refreshAllData().catch(err => console.warn('Post-checksheet sync:', err));
+        } catch (err) {
+          showToast(`Checksheet submission failed: ${err.message}`, 'error');
+        }
+      });
     });
   }
 
@@ -1840,27 +2068,19 @@ async function initLifePulseApp() {
       const username = document.getElementById('cs-login-username').value;
       const password = document.getElementById('cs-login-password').value;
       const submitBtn = csLoginForm.querySelector('button[type="submit"]');
-      const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="auth-btn-spinner"></span> Signing In...';
-      }
-      try {
-        const loginData = await api.auth.login(username, password);
-        store.setUser(loginData.user, loginData.donor_profile);
-        showToast(`Welcome! Loaded details for ${loginData.user.first_name || loginData.user.username}`, 'success');
-        updateUIForAuth();
-        populateChecksheetEdit();
-        // Non-blocking background sync
-        refreshAllData().catch(console.error);
-      } catch (err) {
-        showToast(`Sign in failed: ${err.message}`, 'error');
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = origBtnHtml;
+      await runWithSubmitLock(submitBtn, 'Signing In...', async () => {
+        try {
+          const loginData = await api.auth.login(username, password);
+          store.setUser(loginData.user, loginData.donor_profile || null);
+          showToast(`Welcome! Signed in as ${loginData.user.first_name || loginData.user.username}`, 'success');
+          updateUIForAuth();
+          populateChecksheetEdit();
+          // Non-blocking background sync
+          refreshAllData().catch(console.error);
+        } catch (err) {
+          showToast(`Sign in failed: ${err.message}`, 'error');
         }
-      }
+      });
     });
   }
 
@@ -1869,30 +2089,69 @@ async function initLifePulseApp() {
   if (csUpdateForm) {
     csUpdateForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const formData = new FormData(csUpdateForm);
-      const payload = {
-        phone_number: formData.get('phone_number'),
-        alternate_phone: formData.get('alternate_phone'),
-        district: formData.get('district'),
-        city: formData.get('city'),
-        pincode: formData.get('pincode'),
-        last_donation_date: formData.get('last_donation_date') || null,
-        is_available: formData.get('is_available') === 'true',
-      };
+      const submitBtn = document.getElementById('cs-update-submit-btn') || csUpdateForm.querySelector('button[type="submit"]');
+      await runWithSubmitLock(submitBtn, 'Updating Record...', async () => {
+        const formData = new FormData(csUpdateForm);
+        const payload = {
+          phone_number: String(formData.get('phone_number') || '').trim(),
+          alternate_phone: String(formData.get('alternate_phone') || '').trim(),
+          district: formData.get('district'),
+          city: String(formData.get('city') || '').trim(),
+          pincode: String(formData.get('pincode') || '').trim(),
+          last_donation_date: formData.get('last_donation_date') || null,
+          is_available: formData.get('is_available') === 'true',
+        };
 
-      try {
-        await api.donors.updateProfile(payload);
-        showToast('Donor details updated and saved to database successfully!', 'success');
-        const authCheck = await api.auth.me();
-        store.setUser(authCheck.user, authCheck.donor_profile);
-        await refreshAllData();
-        updateUIForAuth();
-        populateChecksheetEdit();
-      } catch (err) {
-        showToast(`Update failed: ${err.message}`, 'error');
-      }
+        try {
+          const res = await api.donors.updateProfile(payload);
+          showToast('Donor details updated and saved to database successfully!', 'success');
+          store.setUser(store.state.user, res.profile || store.state.donorProfile);
+          updateUIForAuth();
+          populateChecksheetEdit();
+          refreshAllData().catch(err => console.warn('Post-update sync:', err));
+        } catch (err) {
+          showToast(`Update failed: ${err.message}`, 'error');
+        }
+      });
     });
   }
+
+  // Modal backdrop click-outside & Escape key dismissal
+  ['request-modal', 'donor-register-modal', 'log-donation-modal', 'login-modal'].forEach(modalId => {
+    const modalEl = document.getElementById(modalId);
+    if (modalEl) {
+      modalEl.addEventListener('click', (e) => {
+        if (e.target === modalEl) {
+          window.closeModal(modalId);
+        }
+      });
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const customPopup = document.getElementById('custom-confirm-modal');
+    if (customPopup && customPopup.classList.contains('open')) return;
+    const openModal = document.querySelector('.modal-backdrop.open');
+    if (openModal && openModal.id) {
+      window.closeModal(openModal.id);
+      return;
+    }
+    const mobileDrawer = document.getElementById('mobile-nav-drawer');
+    if (mobileDrawer && mobileDrawer.classList.contains('open')) {
+      window.closeMobileMenu();
+    }
+  });
+
+  // Keyboard accessibility (Enter / Space) on stat boxes
+  document.querySelectorAll('.stat-box-modern[role="button"]').forEach(box => {
+    box.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        box.click();
+      }
+    });
+  });
 
   // Initialize Network Connectivity & Offline Monitoring
   initNetworkMonitoring();
@@ -1901,34 +2160,8 @@ async function initLifePulseApp() {
   renderTickerAndInventory(store.state);
   renderSearchResults(store.state);
 
-  // First entrance: directly prompt Sign In modal immediately if unauthenticated
-  const hasStoredToken = !!localStorage.getItem('access_token') || !!localStorage.getItem('token');
-  const hasChosenGuest = sessionStorage.getItem('lifepulse_guest_visited');
-  if (!hasStoredToken && !hasChosenGuest) {
-    window.openLoginModal();
-  }
-
-  // Initial authentication check & background data refresh
-  (async () => {
-    if (hasStoredToken) {
-      try {
-        const authCheck = await api.auth.me();
-        store.setUser(authCheck.user, authCheck.donor_profile);
-      } catch (err) {
-        store.setUser(null, null);
-      }
-    } else {
-      store.setUser(null, null);
-    }
-
-    // Refresh live database data silently in background
-    await refreshAllData({ showSkeleton: false });
-    updateUIForAuth();
-    populateChecksheetEdit();
-  })();
-
   // Hash-based direct link routing (#checksheet, #inventory, etc.)
-  function handleHashRoute() {
+  function handleHashRoute(allowAuthRedirect = true) {
     const hash = window.location.hash.toLowerCase();
     if (hash === '#checksheet' || hash === '#register') {
       window.switchModule('checksheet');
@@ -1941,7 +2174,7 @@ async function initLifePulseApp() {
     } else if (hash === '#admin' || hash === '#console') {
       if (store.state.user && store.state.role === 'admin') {
         window.switchModule('admin_console');
-      } else {
+      } else if (allowAuthRedirect) {
         window.switchModule('search');
         showToast('Staff Administrator authentication required to enter Console.', 'warning');
         window.openLoginModal();
@@ -1949,8 +2182,49 @@ async function initLifePulseApp() {
     }
   }
 
-  window.addEventListener('hashchange', handleHashRoute);
-  handleHashRoute();
+  // First entrance: directly prompt Sign In modal only when no saved session token exists
+  const hasStoredToken = !!localStorage.getItem('lifepulse_auth_token');
+  const hasChosenGuest = sessionStorage.getItem('lifepulse_guest_visited');
+  if (!hasStoredToken && !hasChosenGuest) {
+    window.openLoginModal();
+  }
+
+  // Apply non-auth hash links immediately; defer #admin check until token verification finishes
+  handleHashRoute(!hasStoredToken);
+  window.addEventListener('hashchange', () => handleHashRoute(true));
+
+  // Initial authentication restoration & background data refresh
+  (async () => {
+    if (hasStoredToken) {
+      try {
+        const authCheck = await api.auth.me();
+        if (authCheck && authCheck.authenticated && authCheck.user) {
+          store.setUser(authCheck.user, authCheck.donor_profile || null);
+        } else {
+          // Session explicitly expired/invalidated on server -> clear stale token
+          localStorage.removeItem('lifepulse_auth_token');
+          store.setUser(null, null);
+          if (!sessionStorage.getItem('lifepulse_guest_visited')) {
+            window.openLoginModal();
+          }
+        }
+      } catch (err) {
+        // Keep stored token intact if offline/timeout; reset active in-memory user gracefully
+        store.setUser(null, null);
+      }
+    } else {
+      store.setUser(null, null);
+    }
+
+    updateUIForAuth();
+    populateChecksheetEdit();
+    handleHashRoute(true);
+
+    // Refresh live database data silently in background
+    await refreshAllData({ showSkeleton: false });
+    updateUIForAuth();
+    populateChecksheetEdit();
+  })();
 
   console.log('LifePulse Portal Initialized in Real Working Model Mode.');
 }

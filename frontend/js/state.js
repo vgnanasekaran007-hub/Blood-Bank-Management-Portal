@@ -272,9 +272,9 @@ class AppStore {
         localStorage.setItem('lifepulse_cached_inventory', JSON.stringify(partial.inventory));
       } catch (e) {}
     }
-    if (partial.searchResults && Array.isArray(partial.searchResults)) {
+    if (partial.allDonors && Array.isArray(partial.allDonors) && partial.allDonors.length > 0) {
       try {
-        localStorage.setItem('lifepulse_cached_donors', JSON.stringify(partial.searchResults));
+        localStorage.setItem('lifepulse_cached_donors', JSON.stringify(partial.allDonors));
       } catch (e) {}
     }
     this.notify('update');

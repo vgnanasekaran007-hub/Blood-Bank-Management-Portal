@@ -12,15 +12,45 @@ from datetime import date
 
 
 class UserSerializer(serializers.ModelSerializer):
-    role = serializers.CharField(source='profile.role', read_only=True)
-    phone_number = serializers.CharField(source='profile.phone_number', read_only=True)
-    city = serializers.CharField(source='profile.city', read_only=True)
-    district = serializers.CharField(source='profile.district', read_only=True)
+    role = serializers.SerializerMethodField()
+    phone_number = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    district = serializers.SerializerMethodField()
     is_donor = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role', 'phone_number', 'city', 'district', 'is_donor']
+
+    def get_role(self, obj):
+        if obj.is_superuser or obj.is_staff:
+            return 'admin'
+        if hasattr(obj, 'profile') and obj.profile.role:
+            return obj.profile.role
+        if hasattr(obj, 'donor_profile'):
+            return 'donor'
+        return 'requester'
+
+    def get_phone_number(self, obj):
+        if hasattr(obj, 'profile'):
+            return obj.profile.phone_number
+        if hasattr(obj, 'donor_profile'):
+            return obj.donor_profile.phone_number
+        return ''
+
+    def get_city(self, obj):
+        if hasattr(obj, 'profile'):
+            return obj.profile.city
+        if hasattr(obj, 'donor_profile'):
+            return obj.donor_profile.city
+        return ''
+
+    def get_district(self, obj):
+        if hasattr(obj, 'profile'):
+            return obj.profile.district
+        if hasattr(obj, 'donor_profile'):
+            return obj.donor_profile.district
+        return ''
 
     def get_is_donor(self, obj):
         return hasattr(obj, 'donor_profile')
@@ -43,22 +73,39 @@ class RegisterSerializer(serializers.Serializer):
     gender = serializers.ChoiceField(choices=[g[0] for g in GENDER_CHOICES], required=False, default='MALE')
     locality = serializers.CharField(max_length=150, required=False, allow_blank=True)
     pincode = serializers.CharField(max_length=10, required=False, allow_blank=True)
+    last_donation_date = serializers.DateField(required=False, allow_null=True)
+    is_available = serializers.BooleanField(required=False, default=True)
 
     def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
+        cleaned = str(value).strip()
+        if not cleaned:
+            raise serializers.ValidationError("Username cannot be blank.")
+        if User.objects.filter(username__iexact=cleaned).exists():
             raise serializers.ValidationError("A user with this username already exists.")
-        return value
+        return cleaned
 
     def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
+        cleaned = str(value).strip().lower()
+        if User.objects.filter(email__iexact=cleaned).exists():
             raise serializers.ValidationError("An account with this email address already exists.")
-        return value
+        return cleaned
+
+    def validate_full_name(self, value):
+        cleaned = str(value).strip()
+        if not cleaned:
+            raise serializers.ValidationError("Full name cannot be blank.")
+        return cleaned
 
     def validate_phone_number(self, value):
         cleaned = re.sub(r'[\s\-\(\)\+]', '', str(value))
         if len(cleaned) < 10 or not cleaned.isdigit():
             raise serializers.ValidationError("Enter a valid 10-digit phone number.")
         return cleaned
+
+    def validate_last_donation_date(self, value):
+        if value and value > date.today():
+            raise serializers.ValidationError("Last donation date cannot be in the future.")
+        return value
 
     def validate(self, data):
         if data.get('role') == 'donor':
@@ -96,6 +143,17 @@ class DonorProfileSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['total_donations', 'created_at', 'updated_at']
+
+    def validate_last_donation_date(self, value):
+        if value and value > date.today():
+            raise serializers.ValidationError("Last donation date cannot be in the future.")
+        return value
+
+    def validate_phone_number(self, value):
+        cleaned = re.sub(r'[\s\-\(\)\+]', '', str(value))
+        if len(cleaned) < 10 or not cleaned.isdigit():
+            raise serializers.ValidationError("Enter a valid 10-digit phone number.")
+        return cleaned
 
 
 class PublicDonorSearchSerializer(serializers.ModelSerializer):
@@ -237,6 +295,9 @@ class BloodRequestSerializer(serializers.ModelSerializer):
 
 
 class BloodRequestCreateSerializer(serializers.ModelSerializer):
+    hospital_address = serializers.CharField(required=False, allow_blank=True, default='')
+    city = serializers.CharField(max_length=100, required=False, allow_blank=True, default='')
+
     class Meta:
         model = BloodRequest
         fields = [
@@ -246,10 +307,21 @@ class BloodRequestCreateSerializer(serializers.ModelSerializer):
             'urgency', 'medical_reason', 'required_by_date'
         ]
 
+    def validate_patient_age(self, value):
+        if value < 0 or value > 120:
+            raise serializers.ValidationError("Enter a valid patient age between 0 and 120.")
+        return value
+
     def validate_units_needed(self, value):
         if value < 1 or value > 10:
             raise serializers.ValidationError("Requested blood units must be between 1 and 10 units per request.")
         return value
+
+    def validate(self, data):
+        for field in ('hospital_address', 'city', 'medical_reason'):
+            if data.get(field) is None:
+                data[field] = ''
+        return data
 
     def validate_contact_phone(self, value):
         cleaned = re.sub(r'[\s\-\(\)\+]', '', str(value))

@@ -210,3 +210,104 @@ class BloodPortalModuleTests(TestCase):
         # Verify stock did not go negative
         inv = BloodInventory.objects.get(blood_group='AB-')
         self.assertEqual(inv.units_available, 10)
+
+    def test_bearer_token_logout_revokes_session(self):
+        # Log in to obtain a session bearer token
+        login_res = self.client.post('/api/auth/login/', {
+            'username': 'admin',
+            'password': 'admin123'
+        }, content_type='application/json')
+        self.assertEqual(login_res.status_code, 200)
+        token = login_res.json().get('token')
+        self.assertTrue(token)
+
+        # Fresh client simulating cross-origin Vercel browser carrying only Bearer header
+        bearer_client = Client()
+        me_before = bearer_client.get('/api/auth/me/', HTTP_AUTHORIZATION=f'Bearer {token}')
+        self.assertEqual(me_before.status_code, 200)
+        self.assertTrue(me_before.json()['authenticated'])
+
+        # Logout via Bearer token must revoke DB session and return 200
+        logout_res = bearer_client.post('/api/auth/logout/', content_type='application/json', HTTP_AUTHORIZATION=f'Bearer {token}')
+        self.assertEqual(logout_res.status_code, 200)
+
+        # Subsequent /auth/me/ with revoked Bearer token must report unauthenticated
+        me_after = bearer_client.get('/api/auth/me/', HTTP_AUTHORIZATION=f'Bearer {token}')
+        self.assertEqual(me_after.status_code, 200)
+        self.assertFalse(me_after.json()['authenticated'])
+
+    def test_guest_emergency_request_with_blank_optional_fields(self):
+        res = self.client.post('/api/requests/', {
+            'patient_name': 'Emergency Patient',
+            'patient_age': 44,
+            'patient_gender': 'FEMALE',
+            'blood_group': 'O+',
+            'units_needed': 1,
+            'hospital_name': 'Govt General Hospital',
+            'hospital_address': '',
+            'city': '',
+            'district': 'Chennai',
+            'contact_person': 'Arun Kumar',
+            'contact_phone': '9840554433',
+            'urgency': 'CRITICAL',
+            'medical_reason': '',
+            'required_by_date': str(date.today())
+        }, content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.json()['patient_name'], 'Emergency Patient')
+
+    def test_checksheet_registration_persists_donation_date_and_validates(self):
+        past_date = str(date.today() - timedelta(days=120))
+        res = self.client.post('/api/auth/register/', {
+            'username': 'ChecksheetDonor',
+            'email': 'CHECKSHEET@TEST.COM',
+            'password': 'password123',
+            'full_name': 'Lakshmi Narayanan',
+            'role': 'donor',
+            'phone_number': '9840332211',
+            'blood_group': 'B-',
+            'district': 'Madurai',
+            'city': 'KK Nagar',
+            'last_donation_date': past_date,
+            'is_available': False,
+        }, content_type='application/json')
+        self.assertEqual(res.status_code, 201)
+        profile = DonorProfile.objects.get(user__username='ChecksheetDonor')
+        self.assertEqual(str(profile.last_donation_date), past_date)
+        self.assertFalse(profile.is_available)
+
+        # Future last_donation_date must be rejected with 400
+        future_res = self.client.post('/api/auth/register/', {
+            'username': 'future_donor',
+            'email': 'future@test.com',
+            'password': 'password123',
+            'full_name': 'Future Date',
+            'role': 'donor',
+            'phone_number': '9840332200',
+            'blood_group': 'O+',
+            'district': 'Chennai',
+            'last_donation_date': str(date.today() + timedelta(days=5)),
+        }, content_type='application/json')
+        self.assertEqual(future_res.status_code, 400)
+
+        # Case-insensitive email & username duplicate must be rejected
+        dup_res = self.client.post('/api/auth/register/', {
+            'username': 'checksheetdonor',
+            'email': 'checksheet@test.com',
+            'password': 'password123',
+            'full_name': 'Duplicate User',
+            'role': 'donor',
+            'phone_number': '9840332299',
+            'blood_group': 'B-',
+            'district': 'Madurai',
+        }, content_type='application/json')
+        self.assertEqual(dup_res.status_code, 400)
+
+        # PATCH profile with empty last_donation_date clears it cleanly
+        self.client.login(username='ChecksheetDonor', password='password123')
+        patch_res = self.client.patch('/api/donors/profile/', {
+            'last_donation_date': ''
+        }, content_type='application/json')
+        self.assertEqual(patch_res.status_code, 200)
+        profile.refresh_from_db()
+        self.assertIsNone(profile.last_donation_date)

@@ -28,6 +28,24 @@ function getCookie(name) {
   return cookieValue;
 }
 
+function formatValidationDetails(details) {
+  if (!details || typeof details !== 'object') return '';
+  if (Array.isArray(details)) {
+    return details.map(item => (typeof item === 'string' ? item : JSON.stringify(item))).join(' ');
+  }
+  const parts = [];
+  for (const [field, value] of Object.entries(details)) {
+    const label = field === 'non_field_errors' || field === 'detail'
+      ? ''
+      : `${field.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}: `;
+    const msg = Array.isArray(value)
+      ? value.map(v => (typeof v === 'string' ? v : formatValidationDetails(v))).join(', ')
+      : (typeof value === 'object' ? formatValidationDetails(value) : String(value));
+    if (msg) parts.push(`${label}${msg}`);
+  }
+  return parts.join(' | ');
+}
+
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
   const headers = {
@@ -38,7 +56,7 @@ async function request(endpoint, options = {}) {
 
   // Attach token from localStorage for seamless cross-domain session handling
   const token = localStorage.getItem('lifepulse_auth_token');
-  if (token) {
+  if (token && !headers['Authorization']) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
@@ -48,7 +66,8 @@ async function request(endpoint, options = {}) {
   }
 
   const controller = new AbortController();
-  const timeoutMs = options.timeout || (endpoint === '/health/' ? 6000 : 10000);
+  const defaultTimeout = endpoint === '/health/' ? 8000 : (endpoint === '/auth/logout/' ? 5000 : 25000);
+  const timeoutMs = options.timeout || defaultTimeout;
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   const config = {
@@ -76,8 +95,24 @@ async function request(endpoint, options = {}) {
       if (response.status === 401) {
         localStorage.removeItem('lifepulse_auth_token');
       }
-      const errorMsg = (data && (data.error || data.detail || (data.details && JSON.stringify(data.details))))
-        || `Request failed with status ${response.status}`;
+      const detailsMsg = data && typeof data === 'object' ? formatValidationDetails(data.details) : '';
+      const genericErrors = new Set([
+        'Validation failed',
+        'Invalid profile data',
+        'Invalid status transition',
+        'Invalid verification input',
+      ]);
+      let errorMsg = '';
+      if (detailsMsg && (!data.error || genericErrors.has(data.error))) {
+        errorMsg = detailsMsg;
+      } else if (data && typeof data === 'object') {
+        errorMsg = data.error || data.detail || detailsMsg;
+      } else if (typeof data === 'string' && data.trim() && !data.trim().startsWith('<')) {
+        errorMsg = data.trim().slice(0, 180);
+      }
+      if (!errorMsg) {
+        errorMsg = `Request failed with status ${response.status}`;
+      }
       const err = new Error(errorMsg);
       err.status = response.status;
       err.data = data;
@@ -109,11 +144,20 @@ export const api = {
     login: (username, password) => request('/auth/login/', { method: 'POST', body: { username, password } }),
     register: (userData) => request('/auth/register/', { method: 'POST', body: userData }),
     logout: async () => {
+      // Clear local session token immediately so UI sign-out is 0ms & resilient to offline/cold starts
+      const token = localStorage.getItem('lifepulse_auth_token');
+      localStorage.removeItem('lifepulse_auth_token');
       try {
-        await request('/auth/logout/', { method: 'POST' });
-      } finally {
-        localStorage.removeItem('lifepulse_auth_token');
+        await request('/auth/logout/', {
+          method: 'POST',
+          timeout: 5000,
+          keepalive: true,
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+      } catch (err) {
+        console.warn('Server logout warning (local session already cleared):', err?.message || err);
       }
+      return { message: 'Logged out cleanly' };
     },
     me: () => request('/auth/me/'),
   },
