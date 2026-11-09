@@ -21,71 +21,12 @@
 [![UptimeRobot](https://img.shields.io/badge/Monitoring-UptimeRobot%20%2Fhealth%2F-3BD671?style=flat-square)](https://uptimerobot.com/)
 [![CCS375](https://img.shields.io/badge/Course-CCS375%20Web%20Technologies%20(Team%201)-dc2626?style=flat-square)](#academic--documentation-references)
 
----
-
-### Quick Access Links
-
-| Resource | Purpose | Live Link |
-| :--- | :--- | :--- |
-| **Live Web Application** | Deployed Single-Page Application (Dark & Light Themes) | [**https://lifepulse-ivory.vercel.app/**](https://lifepulse-ivory.vercel.app/) |
-| **REST API Gateway** | Django REST Framework API Directory | [**`https://blood-bank-portal-backend.onrender.com/api/`**](https://blood-bank-portal-backend.onrender.com/api/) |
-| **Service Health Monitor** | Lightweight Zero-DB Readiness Probe for UptimeRobot | [**`https://blood-bank-portal-backend.onrender.com/health/`**](https://blood-bank-portal-backend.onrender.com/health/) |
-| **Source Repository** | GitHub Monorepo (`frontend/`, `backend/`, `docs/`) | [**View on GitHub**](https://github.com/vgnanasekaran007-hub/Blood-Bank-Management-Portal) |
-
 </div>
 
 ---
 
-## Table of Contents
+## Application Overviews
 
-1. [Project Overview](#project-overview)
-2. [Technologies & Architecture Stack](#technologies--architecture-stack)
-3. [Application Screenshots](#application-screenshots)
-4. [Core Modules & Clinical Integrity Guarantees](#core-modules--clinical-integrity-guarantees)
-5. [API Endpoints Summary](#api-endpoints-summary)
-6. [Local Development & Automated Testing](#local-development--automated-testing)
-7. [Academic & Documentation References](#academic--documentation-references)
-8. [Developer Details](#developer-details)
-
----
-
-## Project Overview
-
-**LifePulse** is an end-to-end blood donor registry and emergency inventory coordination platform engineered for clinical workflows across **all 38 districts of Tamil Nadu**. Rather than relying on static sheets or delayed manual calls, LifePulse enforces real database rules for donor eligibility, privacy masking, clinical two-step donation verification, and atomic stock deduction during critical hospital requisitions.
-
-### Key Highlights
-- **Privacy-Preserving Donor Discovery:** Public blood searches never leak personal phone numbers, email addresses, or exact home addresses—displaying anonymized donor codes (`DNR-XXXX`), verification badges, district/locality context, and 90-day safe interval eligibility.
-- **Clinical Double-Verification Gate:** Voluntary walk-in donations submitted by donors enter `PENDING` status and only increment live inventory after an accredited Staff Administrator verifies and accepts them into stock.
-- **Atomic Inventory Protection:** Blood stock deductions during emergency dispatch execute inside atomic database transactions with PostgreSQL row-level locking (`select_for_update()`) and `CHECK (units_available >= 0)` constraints.
-- **Production Uptime Readiness:** Dedicated zero-DB `/health/` probe (`HTTP 200`, `{"status": "ok", "message": "Blood Bank Backend is running"}`) integrated with UptimeRobot and Render health checks to prevent cold-start downtime without stressing Supabase connection pools.
-- **Cross-Origin Bearer & Session Auth:** Works seamlessly across Vercel and Render using token-backed bearer authentication (`SessionTokenAuthentication`) with instant local sign-out and backend token revocation.
-
----
-
-## Technologies & Architecture Stack
-
-```mermaid
-flowchart LR
-    U["Clinicians, Donors & Public Users"] -->|HTTPS| V["Vercel Global Edge CDN<br/>HTML5 • CSS3 • ES6+ Modules"]
-    V -->|Cross-Origin REST JSON + Bearer Auth| R["Render Web Service<br/>Python 3.12 • Django 5.2 • DRF • Gunicorn"]
-    R -->|PostgreSQL Pool + select_for_update| S[("Supabase PostgreSQL 15+<br/>CHECK Constraints & Audit Trail")]
-    M["UptimeRobot 5-min Heartbeat"] -->|GET /health/| R
-```
-
-| Layer | Technologies & Libraries | Engineering Role |
-| :--- | :--- | :--- |
-| **Frontend UI** | **HTML5**, **CSS3**, **Vanilla JavaScript (ES6+ Modules)** (`api.js`, `state.js`, `app.js`) | Semantic SPA architecture, custom Dark & Light clinical themes, glassmorphic modals, custom 38-district searchable dropdown, accessible toast & confirmation dialogs, responsive desktop/tablet/mobile navigation (`360px`–`1536px+`) |
-| **Backend Framework** | **Python 3.12**, **Django >= 5.2.0**, **Django REST Framework >= 3.15.0** | Modular REST API, custom `SessionTokenAuthentication`, role-based permissions (`Public`, `Donor`, `Requester`, `Staff Admin`), input validation, and immutable audit logging |
-| **CORS & Security** | **`django-cors-headers >= 4.3.0`**, **Vercel Security Headers** (`vercel.json`) | Cross-origin support for `.vercel.app` & `.onrender.com`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, SameSite/Secure cookies |
-| **Database Layer** | **Supabase PostgreSQL 15+**, **`psycopg2-binary >= 2.9.9`**, **`dj-database-url >= 2.1.0`** *(SQLite fallback locally)* | Relational schema across 7 core tables, TCP keepalive tuning (`conn_max_age=60`, `conn_health_checks=True`), `CHECK (units_available >= 0)` guard |
-| **WSGI & Cloud Hosting** | **Gunicorn >= 21.2.0** (`--workers 2 --threads 4 --timeout 30`), **Render** (`render.yaml`), **Vercel** | Multi-threaded production API hosting in Singapore (`singapore` region) paired with Vercel edge frontend routing |
-| **Monitoring & Testing** | **UptimeRobot**, **Django `TestCase` (`12` tests)**, **Playwright (Chromium)** | 24/7 `/health/` monitoring, full module + concurrency test suite, and multi-viewport E2E browser regression verification |
-
----
-
-## Application Screenshots
-
-All screenshots below are captured directly from the live production deployment at **[https://lifepulse-ivory.vercel.app/](https://lifepulse-ivory.vercel.app/)**.
 
 ### 1. Home Page, Live Ticker & Quick Blood Search
 Real-time emergency stock ticker across all 8 ABO/Rh groups, quick blood group matrix with Tamil Nadu temple-skyline district selector, and live platform KPIs.
@@ -136,6 +77,54 @@ Strictly authentication-gated console providing real-time statewide operational 
 ![Blood Bank Staff Administrator Console](docs/screenshots/10-admin-console.png)
 
 ---
+
+### Quick Access Links
+
+| Resource | Purpose | Live Link |
+| :--- | :--- | :--- |
+| **Live Web Application** | Deployed Single-Page Application (Dark & Light Themes) | [**https://lifepulse-ivory.vercel.app/**](https://lifepulse-ivory.vercel.app/) |
+| **REST API Gateway** | Django REST Framework API Directory | [**`https://blood-bank-portal-backend.onrender.com/api/`**](https://blood-bank-portal-backend.onrender.com/api/) |
+| **Service Health Monitor** | Lightweight Zero-DB Readiness Probe for UptimeRobot | [**`https://blood-bank-portal-backend.onrender.com/health/`**](https://blood-bank-portal-backend.onrender.com/health/) |
+| **Source Repository** | GitHub Monorepo (`frontend/`, `backend/`, `docs/`) | [**View on GitHub**](https://github.com/vgnanasekaran007-hub/Blood-Bank-Management-Portal) |
+
+</div>
+
+---
+
+## Project Overview
+
+**LifePulse** is an end-to-end blood donor registry and emergency inventory coordination platform engineered for clinical workflows across **all 38 districts of Tamil Nadu**. Rather than relying on static sheets or delayed manual calls, LifePulse enforces real database rules for donor eligibility, privacy masking, clinical two-step donation verification, and atomic stock deduction during critical hospital requisitions.
+
+### Key Highlights
+- **Privacy-Preserving Donor Discovery:** Public blood searches never leak personal phone numbers, email addresses, or exact home addresses—displaying anonymized donor codes (`DNR-XXXX`), verification badges, district/locality context, and 90-day safe interval eligibility.
+- **Clinical Double-Verification Gate:** Voluntary walk-in donations submitted by donors enter `PENDING` status and only increment live inventory after an accredited Staff Administrator verifies and accepts them into stock.
+- **Atomic Inventory Protection:** Blood stock deductions during emergency dispatch execute inside atomic database transactions with PostgreSQL row-level locking (`select_for_update()`) and `CHECK (units_available >= 0)` constraints.
+- **Production Uptime Readiness:** Dedicated zero-DB `/health/` probe (`HTTP 200`, `{"status": "ok", "message": "Blood Bank Backend is running"}`) integrated with UptimeRobot and Render health checks to prevent cold-start downtime without stressing Supabase connection pools.
+- **Cross-Origin Bearer & Session Auth:** Works seamlessly across Vercel and Render using token-backed bearer authentication (`SessionTokenAuthentication`) with instant local sign-out and backend token revocation.
+
+---
+
+## Technologies & Architecture Stack
+
+```mermaid
+flowchart LR
+    U["Clinicians, Donors & Public Users"] -->|HTTPS| V["Vercel Global Edge CDN<br/>HTML5 • CSS3 • ES6+ Modules"]
+    V -->|Cross-Origin REST JSON + Bearer Auth| R["Render Web Service<br/>Python 3.12 • Django 5.2 • DRF • Gunicorn"]
+    R -->|PostgreSQL Pool + select_for_update| S[("Supabase PostgreSQL 15+<br/>CHECK Constraints & Audit Trail")]
+    M["UptimeRobot 5-min Heartbeat"] -->|GET /health/| R
+```
+
+| Layer | Technologies & Libraries | Engineering Role |
+| :--- | :--- | :--- |
+| **Frontend UI** | **HTML5**, **CSS3**, **Vanilla JavaScript (ES6+ Modules)** (`api.js`, `state.js`, `app.js`) | Semantic SPA architecture, custom Dark & Light clinical themes, glassmorphic modals, custom 38-district searchable dropdown, accessible toast & confirmation dialogs, responsive desktop/tablet/mobile navigation (`360px`–`1536px+`) |
+| **Backend Framework** | **Python 3.12**, **Django >= 5.2.0**, **Django REST Framework >= 3.15.0** | Modular REST API, custom `SessionTokenAuthentication`, role-based permissions (`Public`, `Donor`, `Requester`, `Staff Admin`), input validation, and immutable audit logging |
+| **CORS & Security** | **`django-cors-headers >= 4.3.0`**, **Vercel Security Headers** (`vercel.json`) | Cross-origin support for `.vercel.app` & `.onrender.com`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, SameSite/Secure cookies |
+| **Database Layer** | **Supabase PostgreSQL 15+**, **`psycopg2-binary >= 2.9.9`**, **`dj-database-url >= 2.1.0`** *(SQLite fallback locally)* | Relational schema across 7 core tables, TCP keepalive tuning (`conn_max_age=60`, `conn_health_checks=True`), `CHECK (units_available >= 0)` guard |
+| **WSGI & Cloud Hosting** | **Gunicorn >= 21.2.0** (`--workers 2 --threads 4 --timeout 30`), **Render** (`render.yaml`), **Vercel** | Multi-threaded production API hosting in Singapore (`singapore` region) paired with Vercel edge frontend routing |
+| **Monitoring & Testing** | **UptimeRobot**, **Django `TestCase` (`12` tests)**, **Playwright (Chromium)** | 24/7 `/health/` monitoring, full module + concurrency test suite, and multi-viewport E2E browser regression verification |
+
+---
+
 
 ## Core Modules & Clinical Integrity Guarantees
 
